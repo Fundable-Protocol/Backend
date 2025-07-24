@@ -41,3 +41,16 @@ export function isValidBase64String(field: string) {
 
     return isBase64;
 }
+
+// Convert string to u256 (as {low, high} object for starknet.js)
+export function u256FromString(value: string) {
+    const big = BigInt(value);
+    const low = Number(big & BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'));
+    const high = Number(big >> 128n);
+    return { low, high };
+}
+
+// Validate StarkNet contract address (0x-prefixed, 64 hex chars)
+export function isValidContractAddress(address: string) {
+    return /^0x[0-9a-fA-F]{64}$/.test(address);
+}
