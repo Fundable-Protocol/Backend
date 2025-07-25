@@ -2,11 +2,12 @@
 import { RpcProvider, Contract, uint256 } from 'starknet';
 
 // You may want to move these to a config file
-const STARKNET_RPC_URL = process.env.STARKNET_RPC_URL || 'https://starknet-mainnet.public.blastapi.io/rpc/v0_6';
+const STARKNET_RPC_URL = process.env.STARKNET_RPC_URL;
 if (!STARKNET_RPC_URL) {
-  throw new Error('STARKNET_RPC_URL environment variable is required');
+  console.warn('STARKNET_RPC_URL not set, using public endpoint');
 }
-const provider = new RpcProvider({ nodeUrl: STARKNET_RPC_URL });
+const RPC_URL = STARKNET_RPC_URL || 'https://starknet-mainnet.public.blastapi.io/rpc/v0_6';
+const provider = new RpcProvider({ nodeUrl: RPC_URL });
 
 // Standard ERC20 ABI fragment for balanceOf and symbol
 const ERC20_ABI = [

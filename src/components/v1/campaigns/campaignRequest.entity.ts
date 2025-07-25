@@ -1,11 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, Index } from 'typeorm';
 
 @Entity('campaign_requests')
 export class CampaignRequest {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ nullable: false })
+  @Index()
   user_id: string;
 
   @CreateDateColumn({ type: 'timestamptz' })
