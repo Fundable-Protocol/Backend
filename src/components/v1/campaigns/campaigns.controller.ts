@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { validateCampaignInput } from './campaigns.validation';
 import { createCampaignOnChain } from '../../../utils/starknetService';
-import { saveCampaignToDb, isCampaignRefUnique } from './campaigns.db';
+import { saveCampaignToDb, isCampaignRefUnique, saveUserCampaignRequest } from './campaigns.db';
 import logAudit from '../../../utils/logger';
 import { getUserWalletBalance, verifyTokenContract } from '../../../utils/blockchainUtils';
 import { u256FromString, isValidContractAddress } from '../../../utils/helper';
@@ -54,7 +54,7 @@ export const createCampaignController = async (req: Request, res: Response) => {
         success: false,
         error: {
           code: 'INSUFFICIENT_BALANCE',
-          message: 'Insufficient wallet balance for transaction fees',
+          message: 'Insufficient donation token balance',
           details: {},
         },
       });
@@ -128,6 +128,9 @@ export const createCampaignController = async (req: Request, res: Response) => {
       user_id: req.user.id,
       created_at: dayjs().toISOString(),
     });
+
+    // Log this request for rate limiting (after successful creation)
+    await saveUserCampaignRequest(req.user.id);
 
     // Audit log
     logAudit.info('CAMPAIGN_CREATED', {

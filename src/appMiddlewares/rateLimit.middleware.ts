@@ -13,19 +13,29 @@ export const campaignRateLimit = async (req: Request, res: Response, next: NextF
       },
     });
   }
-  const userId = req.user.id;
-  const count = await getUserCampaignCountLastHour(userId);
-  if (count >= 5) {
-    return res.status(429).json({
+  try {
+    const userId = req.user.id;
+    const count = await getUserCampaignCountLastHour(userId);
+    if (count >= 5) {
+      return res.status(429).json({
+        success: false,
+        error: {
+          code: 'RATE_LIMIT_EXCEEDED',
+          message: 'Maximum 5 campaigns per user per hour exceeded',
+          details: {},
+        },
+      });
+    }
+    // Do not log here - let the controller log after successful campaign creation
+    next();
+  } catch (error) {
+    return res.status(500).json({
       success: false,
       error: {
-        code: 'RATE_LIMIT_EXCEEDED',
-        message: 'Maximum 5 campaigns per user per hour exceeded',
+        code: 'INTERNAL_ERROR',
+        message: 'Rate limit check failed',
         details: {},
       },
     });
   }
-  // Log this request for future rate limit checks
-  await saveUserCampaignRequest(userId);
-  next();
 };
