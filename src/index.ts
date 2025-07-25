@@ -7,7 +7,7 @@ import cors from 'cors';
 
 import fingerprintMiddleware from './appMiddlewares/fingerprint.middleware';
 import { verifyAllowedMethods } from './appMiddlewares';
-import routerV1 from './components/v1/routes.v1';
+import routerV1 from './components/v1/campaigns/routes.v1';
 
 import {
     AppError,

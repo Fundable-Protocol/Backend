@@ -1,8 +1,8 @@
-import EnhancedRouter from '../../utils/enhancedRouter';
+import EnhancedRouter from '../../../utils/enhancedRouter';
 
-import platformRoutes from './platform/platform.routes';
-import walletRoutes from './wallet/wallet.routes';
-import distributionRoutes from "./distribution/distrubtion.routes"
+import platformRoutes from '../platform/platform.routes';
+import walletRoutes from '../wallet/wallet.routes';
+import distributionRoutes from "../distribution/distrubtion.routes"
 import campaignsRoutes from './campaigns.routes';
 
 const routerV1 = new EnhancedRouter();

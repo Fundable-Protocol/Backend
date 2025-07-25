@@ -1,13 +1,11 @@
-import 'express';
+import { AuthUser } from '../../appMiddlewares/auth.middleware';
 
-declare module 'express' {
-  export interface User {
-    id: string;
-    walletAddress: string;
-    // add other user properties as needed
-  }
-
-  export interface Request {
-    user: User;
+declare global {
+  namespace Express {
+    interface Request {
+      user?: AuthUser;
+    }
   }
 }
+
+export {};

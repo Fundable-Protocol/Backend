@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
 import { validateCampaignInput } from './campaigns.validation';
-import { createCampaignOnChain } from '../../utils/starknetService';
+import { createCampaignOnChain } from '../../../utils/starknetService';
 import { saveCampaignToDb, isCampaignRefUnique } from './campaigns.db';
-import logAudit from '../../utils/logger';
-import { getUserWalletBalance, verifyTokenContract } from '../../utils/blockchainUtils';
-import { u256FromString, isValidContractAddress } from '../../utils/helper';
+import logAudit from '../../../utils/logger';
+import { getUserWalletBalance, verifyTokenContract } from '../../../utils/blockchainUtils';
+import { u256FromString, isValidContractAddress } from '../../../utils/helper';
 import dayjs from 'dayjs';
 
 export const createCampaignController = async (req: Request, res: Response) => {
@@ -37,9 +37,19 @@ export const createCampaignController = async (req: Request, res: Response) => {
     }
 
     // Business logic validation
+    if (!req.user || !req.user.walletAddress) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: 'UNAUTHORIZED',
+          message: 'User not authenticated',
+          details: {},
+        },
+      });
+    }
     const userWallet = req.user.walletAddress;
-    const balance = await getUserWalletBalance(userWallet);
-    if (!balance || balance.lte(0)) {
+    const balance = await getUserWalletBalance(userWallet, donation_token);
+    if (!balance || balance.lte(0n)) {
       return res.status(400).json({
         success: false,
         error: {
@@ -80,18 +90,22 @@ export const createCampaignController = async (req: Request, res: Response) => {
         donation_token,
         userWallet,
       });
+      if (!result.campaign_id) {
+        throw new Error('Failed to retrieve campaign_id from transaction');
+      }
       campaign_id = result.campaign_id;
       transaction_hash = result.transaction_hash;
-    } catch (err: any) {
+    } catch (err) {
+      const error = err as { code?: string; message?: string; details?: any };
       // Map contract errors to HTTP status
       let status = 500, code = 'CONTRACT_ERROR', message = 'Contract interaction failed';
-      if (err.code === 'CAMPAIGN_REF_EMPTY') {
+      if (error.code === 'CAMPAIGN_REF_EMPTY') {
         status = 400; code = 'EMPTY_CAMPAIGN_REF'; message = 'Campaign reference is empty';
-      } else if (err.code === 'CAMPAIGN_REF_EXISTS') {
+      } else if (error.code === 'CAMPAIGN_REF_EXISTS') {
         status = 409; code = 'DUPLICATE_CAMPAIGN_REF'; message = 'Campaign reference already exists';
-      } else if (err.code === 'ZERO_AMOUNT') {
+      } else if (error.code === 'ZERO_TARGET_AMOUNT') {
         status = 400; code = 'ZERO_TARGET_AMOUNT'; message = 'Target amount must be greater than zero';
-      } else if (err.code === 'INVALID_CONTRACT_ADDRESS') {
+      } else if (error.code === 'INVALID_CONTRACT_ADDRESS') {
         status = 400; code = 'INVALID_CONTRACT_ADDRESS'; message = 'Donation token contract address is invalid';
       }
       return res.status(status).json({
@@ -99,7 +113,7 @@ export const createCampaignController = async (req: Request, res: Response) => {
         error: {
           code,
           message,
-          details: err.details || {},
+          details: error.details || {},
         },
       });
     }

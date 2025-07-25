@@ -42,6 +42,6 @@ export const campaignSchema = Joi.object({
     }),
 });
 
-export function validateCampaignInput(input: any) {
+export function validateCampaignInput(input: unknown): Joi.ValidationResult {
   return campaignSchema.validate(input, { abortEarly: false });
 }
