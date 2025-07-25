@@ -1,7 +1,7 @@
 import type { Request, Response } from "express"
 import AppDataSource from "../../../config/persistence/data-source"
 import { DistributionEntity } from "./distribution.entity"
-import { DistributionService } from "./Distribution.service"
+import { DistributionService } from "./distribution.service"
 import type { ApiResponse, DistributionResponseDto, CreateDistributionDto } from "./distribution.dto"
 
 const distributionRepository = AppDataSource.getRepository(DistributionEntity)

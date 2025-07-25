@@ -2,24 +2,24 @@ import { Entity, PrimaryColumn, Column } from 'typeorm';
 
 @Entity('campaigns')
 export class Campaign {
-  @PrimaryColumn()
+  @PrimaryColumn('varchar')
   campaign_id: string;
 
-  @Column({ unique: true })
+  @Column('varchar', { unique: true })
   campaign_ref: string;
 
-  @Column()
+  @Column('varchar')
   target_amount: string;
 
-  @Column()
+  @Column('varchar')
   donation_token: string;
 
-  @Column()
+  @Column('varchar')
   transaction_hash: string;
 
-  @Column()
+  @Column('varchar')
   user_id: string;
 
-  @Column()
+  @Column('varchar')
   created_at: string;
 }

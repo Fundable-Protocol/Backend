@@ -5,7 +5,7 @@ export class CampaignRequest {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ nullable: false })
+  @Column('varchar', { nullable: false })
   @Index()
   user_id: string;
 
