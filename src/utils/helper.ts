@@ -36,8 +36,9 @@ export function u256FromString(value: string): { low: bigint; high: bigint } {
         throw new TypeError(`Invalid u256 string: "${value}"`);
     }
     const big = BigInt(value);
-    if (big < 0n) {
-        throw new RangeError(`u256 must be non-negative, got: "${value}"`);
+    const U256_MAX = (1n << 256n) - 1n;
+    if (big <= 0n || big > U256_MAX) {
+        throw new RangeError(`u256 must be in range 1..2^256-1, got: "${value}"`);
     }
     const low = big & BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF');
     const high = big >> 128n;

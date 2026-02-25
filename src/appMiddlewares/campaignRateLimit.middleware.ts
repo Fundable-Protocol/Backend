@@ -11,7 +11,10 @@ let initPromise: Promise<ReturnType<typeof rateLimit>> | null = null;
 
 function getLimiter(): Promise<ReturnType<typeof rateLimit>> {
     if (initPromise) return initPromise;
-    initPromise = createLimiter();
+    initPromise = createLimiter().catch((err) => {
+        initPromise = null;
+        throw err;
+    });
     return initPromise;
 }
 

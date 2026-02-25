@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
+import { QueryFailedError } from 'typeorm';
 
+import { ConflictError } from '../../../utils/errorHandler';
 import { createCampaignOnChain } from '../../../utils/starknetService';
 import {
     getUserWalletBalance,
@@ -9,6 +11,21 @@ import { u256FromString, isValidContractAddress } from '../../../utils/helper';
 import { isCampaignRefUnique, saveCampaign } from './campaign.service';
 import logger from '../../../utils/logger';
 import { StarknetError } from '../../../types/campaign';
+
+const POSTGRES_UNIQUE_VIOLATION = '23505';
+
+function isUniqueConstraintError(err: unknown): boolean {
+    if (err instanceof QueryFailedError) {
+        const code = (err as { driverError?: { code?: string } }).driverError?.code;
+        return code === POSTGRES_UNIQUE_VIOLATION;
+    }
+    const msg = (err as Error)?.message?.toLowerCase() ?? '';
+    return (
+        msg.includes('unique constraint') ||
+        msg.includes('duplicate key') ||
+        msg.includes('already exists')
+    );
+}
 
 export const createCampaign = async (req: Request, res: Response) => {
     try {
@@ -107,14 +124,63 @@ export const createCampaign = async (req: Request, res: Response) => {
             });
         }
 
-        const campaign = await saveCampaign({
-            campaign_id,
-            campaign_ref,
-            target_amount,
-            donation_token,
-            transaction_hash,
-            user_id: req.user.id,
-        });
+        let campaign;
+        try {
+            campaign = await saveCampaign({
+                campaign_id,
+                campaign_ref,
+                target_amount,
+                donation_token,
+                transaction_hash,
+                user_id: req.user.id,
+            });
+        } catch (saveErr) {
+            if (saveErr instanceof ConflictError) {
+                return res.status(409).json({
+                    success: false,
+                    error: {
+                        code: 'DUPLICATE_CAMPAIGN',
+                        message:
+                            'Campaign already exists. Manual recovery may be required. Support has been notified.',
+                        details: { campaign_id, transaction_hash },
+                    },
+                });
+            }
+
+            const recoveryMetadata = {
+                event: 'CAMPAIGN_SAVE_FAILED_AFTER_ONCHAIN',
+                campaign_id,
+                transaction_hash,
+                user_id: req.user.id,
+                campaign_ref,
+                target_amount,
+                donation_token,
+                error_message: (saveErr as Error).message,
+                error_name: (saveErr as Error).name,
+            };
+            logger.error('Campaign DB save failed after on-chain creation', recoveryMetadata);
+
+            if (isUniqueConstraintError(saveErr)) {
+                return res.status(409).json({
+                    success: false,
+                    error: {
+                        code: 'DUPLICATE_CAMPAIGN',
+                        message:
+                            'Campaign already exists. Manual recovery may be required. Support has been notified.',
+                        details: { campaign_id, transaction_hash },
+                    },
+                });
+            }
+
+            return res.status(500).json({
+                success: false,
+                error: {
+                    code: 'INTERNAL_SERVER_ERROR',
+                    message: 'Failed to persist campaign after on-chain creation',
+                    details: {},
+                },
+            });
+        }
 
         logger.info('CAMPAIGN_CREATED', {
             user_id: req.user.id,
@@ -141,7 +207,7 @@ export const createCampaign = async (req: Request, res: Response) => {
             success: false,
             error: {
                 code: 'INTERNAL_SERVER_ERROR',
-                message: error.message || 'Internal server error',
+                message: 'Internal server error',
                 details: {},
             },
         });

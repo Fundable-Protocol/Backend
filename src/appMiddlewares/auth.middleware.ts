@@ -34,8 +34,17 @@ export function authMiddleware(
         return;
     }
     const token = authHeader.split(' ')[1];
+    const verifyOptions: jwt.VerifyOptions = {
+        algorithms: ['HS256'],
+    };
+    if (appConfigs.authConfig.jwtIssuer) {
+        verifyOptions.issuer = appConfigs.authConfig.jwtIssuer;
+    }
+    if (appConfigs.authConfig.jwtAudience) {
+        verifyOptions.audience = appConfigs.authConfig.jwtAudience;
+    }
     try {
-        const decoded = jwt.verify(token, jwtSecret);
+        const decoded = jwt.verify(token, jwtSecret, verifyOptions);
         if (
             typeof decoded === 'object' &&
             decoded !== null &&

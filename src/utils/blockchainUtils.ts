@@ -34,11 +34,10 @@ export async function getUserWalletBalance(
             lte: (n: bigint) => value <= n,
             value,
         };
-    } catch {
-        return {
-            lte: () => true,
-            value: 0n,
-        };
+    } catch (error) {
+        throw new Error(
+            `Failed to fetch wallet balance: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
     }
 }
 

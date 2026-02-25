@@ -23,6 +23,8 @@ const appConfigs = {
     authConfig: {
         saltRound: 10,
         jwtSecret: env.JWT_SECRET || 'secret',
+        jwtIssuer: env.JWT_ISSUER,
+        jwtAudience: env.JWT_AUDIENCE,
         hashPepper: env.HASH_PEPPER || '',
         sessionLifeSpan: '2 days',
         maxInactivity: '4 hours',

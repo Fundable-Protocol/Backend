@@ -18,6 +18,12 @@ try {
     );
 }
 
+function toError(mapped: StarknetError): Error {
+    const err = new Error(mapped.message || 'Unknown contract error');
+    Object.assign(err, mapped);
+    return err;
+}
+
 const provider = new RpcProvider({
     nodeUrl:
         process.env.STARKNET_RPC_URL ||
@@ -33,8 +39,8 @@ export async function createCampaignOnChain({
     campaign_id: string;
     transaction_hash: string;
 }> {
-    const privateKey = await getUserPrivateKey(userWallet);
     if (!userWallet) throw new Error('userWallet is required');
+    const privateKey = await getUserPrivateKey(userWallet);
     if (!privateKey) throw new Error('privateKey is required');
 
     const account = new Account(provider, userWallet, privateKey);
@@ -77,13 +83,13 @@ export async function createCampaignOnChain({
                     attempt++;
                     continue;
                 }
-                throw mapStarknetError(error);
+                throw toError(mapStarknetError(error));
             }
             throw new Error('Unknown error during contract interaction');
         }
     }
     throw mapStarknetError(
-        lastError || new Error('Unknown error after retries')
+        mapStarknetError(lastError || new Error('Unknown error after retries'))
     );
 }
 
@@ -140,7 +146,7 @@ function mapStarknetError(err: unknown): StarknetError {
             details: error,
         };
     }
-    if (message.includes('CAMPAIGN_REF_EMPTY') || message.includes('0x')) {
+    if (message.includes('CAMPAIGN_REF_EMPTY')) {
         return {
             code: 'CAMPAIGN_REF_EMPTY',
             message: 'Campaign reference is empty',
