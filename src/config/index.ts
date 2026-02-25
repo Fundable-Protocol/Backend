@@ -22,7 +22,7 @@ const appConfigs = {
     environment: env.NODE_ENV || 'dev',
     authConfig: {
         saltRound: 10,
-        jwtSecret: env.JWT_SECRET || 'secret',
+        jwtSecret: env.JWT_SECRET,
         jwtIssuer: env.JWT_ISSUER,
         jwtAudience: env.JWT_AUDIENCE,
         hashPepper: env.HASH_PEPPER || '',

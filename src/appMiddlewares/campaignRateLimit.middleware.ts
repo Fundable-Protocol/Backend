@@ -65,6 +65,10 @@ export const campaignRateLimit = async (
             },
         });
     }
-    const limiterInstance = await getLimiter();
-    limiterInstance(req, res, next);
+    try {
+        const limiterInstance = await getLimiter();
+        limiterInstance(req, res, next);
+    } catch (err) {
+        next(err);
+    }
 };

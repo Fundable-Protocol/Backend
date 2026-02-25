@@ -16,12 +16,7 @@ function isUniqueConstraintViolation(err: unknown): boolean {
         const code = (err as { driverError?: { code?: string } }).driverError?.code;
         return code === POSTGRES_UNIQUE_VIOLATION;
     }
-    const msg = (err as Error)?.message?.toLowerCase() ?? '';
-    return (
-        msg.includes('unique constraint') ||
-        msg.includes('duplicate key') ||
-        msg.includes('already exists')
-    );
+    return false;
 }
 
 export async function isCampaignRefUnique(campaign_ref: string): Promise<boolean> {
