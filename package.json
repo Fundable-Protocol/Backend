@@ -4,6 +4,13 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
+    "migration:run": "typeorm migration:run -d src/config/persistence",
+    "migration:revert": "typeorm migration:revert -d src/config/persistence",
+    "migration:generate": "ts-node src/scripts/generate-migration.ts",
+    "db:start": "docker compose up -d db",
+    "db:stop": "docker compose down",
+    "db:reset": "docker compose down -v && docker compose up -d db",
+    "setup": "npm run db:start && sleep 3 && npm run migration:run",
     "typeorm": "tsx --env-file=.env node_modules/typeorm/cli.js -d src/config/persistence/data-source.ts",
     "generate-migration": "tsx src/scripts/generate-migration.ts",
     "run-migration": "yarn typeorm migration:run",
