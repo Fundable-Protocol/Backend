@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-const starknetAddressRegex = /^0x[0-9a-fA-F]{64}$/;
-const decimalStringRegex = /^\d+$/;
+const starknetAddressRegex = /^0x[0-9a-fA-F]{1,64}$/;
+const decimalStringRegex = /^[1-9]\d*$/;
 
 export const createCampaignSchema = z.object({
     campaign_ref: z
@@ -21,7 +21,14 @@ export const createCampaignSchema = z.object({
         ),
     donation_token: z
         .string()
-        .regex(starknetAddressRegex, 'donation_token must be a valid contract address'),
+        .regex(starknetAddressRegex, 'donation_token must be a valid contract address')
+        .refine(
+            (v) => {
+                const feltMax = 2n ** 251n + 17n * 2n ** 192n; // Stark prime - 1
+                return BigInt(v) < feltMax;
+            },
+            'donation_token exceeds the StarkNet felt252 address range'
+        ),
 });
 
 export type CreateCampaignInput = z.infer<typeof createCampaignSchema>;

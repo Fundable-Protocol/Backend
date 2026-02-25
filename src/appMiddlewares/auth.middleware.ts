@@ -4,18 +4,25 @@ import jwt from 'jsonwebtoken';
 import appConfigs from '../config';
 import { AuthUser } from '../types/auth';
 
-const jwtSecret = appConfigs.authConfig.jwtSecret;
-if (!jwtSecret) {
-    throw new Error('JWT_SECRET environment variable is required');
-}
-
 export function authMiddleware(
     req: Request,
     res: Response,
     next: NextFunction
 ): void {
+    const jwtSecret = appConfigs.authConfig.jwtSecret;
+    if (!jwtSecret) {
+        res.status(500).json({
+            success: false,
+            error: {
+                code: 'INTERNAL_SERVER_ERROR',
+                message: 'Server misconfiguration',
+                details: {},
+            },
+        });
+        return;
+    }
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader || !authHeader.toLowerCase().startsWith('bearer ')) {
         res.status(401).json({
             success: false,
             error: {
@@ -32,8 +39,8 @@ export function authMiddleware(
         if (
             typeof decoded === 'object' &&
             decoded !== null &&
-            'id' in decoded &&
-            'walletAddress' in decoded
+            typeof (decoded as Record<string, unknown>).id === 'string' &&
+            typeof (decoded as Record<string, unknown>).walletAddress === 'string'
         ) {
             req.user = decoded as AuthUser;
             next();

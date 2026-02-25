@@ -8,7 +8,7 @@ import { createCampaign } from './campaign.controller';
 const campaignRouter = new EnhancedRouter();
 
 campaignRouter.post(
-    '/campaigns',
+    '/',
     authMiddleware,
     campaignRateLimit,
     policyMiddleware(createCampaignSchema),

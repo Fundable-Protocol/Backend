@@ -12,11 +12,11 @@ export class CampaignEntity {
     @Column('varchar', { name: 'target_amount' })
     target_amount: string;
 
-    @Column('varchar', { name: 'donation_token' })
-    donation_token: string;
+    @Column('varchar', { name: 'donation_token', nullable: true })
+    donation_token: string | null;
 
-    @Column('varchar', { name: 'transaction_hash' })
-    transaction_hash: string;
+    @Column('varchar', { name: 'transaction_hash', nullable: true })
+    transaction_hash: string | null;
 
     @Column('varchar', { name: 'user_id' })
     user_id: string;

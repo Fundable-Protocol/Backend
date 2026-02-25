@@ -10,7 +10,7 @@ export interface CampaignData {
 
 export interface CreateCampaignParams {
     campaign_ref: string;
-    target_amount: { low: number; high: number };
+    target_amount: { low: bigint; high: bigint };
     donation_token: string;
     userWallet: string;
 }

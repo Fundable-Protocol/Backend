@@ -31,10 +31,16 @@ export const isValidUserId = (userId: string) => {
     return isValidUUID || isValidULID || isValidCustomId;
 };
 
-export function u256FromString(value: string): { low: number; high: number } {
+export function u256FromString(value: string): { low: bigint; high: bigint } {
+    if (!/^\d+$/.test(value) && !/^0x[0-9a-fA-F]+$/.test(value)) {
+        throw new TypeError(`Invalid u256 string: "${value}"`);
+    }
     const big = BigInt(value);
-    const low = Number(big & BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'));
-    const high = Number(big >> 128n);
+    if (big < 0n) {
+        throw new RangeError(`u256 must be non-negative, got: "${value}"`);
+    }
+    const low = big & BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF');
+    const high = big >> 128n;
     return { low, high };
 }
 

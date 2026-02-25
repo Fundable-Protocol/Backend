@@ -7,10 +7,19 @@ const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 
 let redisClient: Redis | null = null;
 let limiter: ReturnType<typeof rateLimit> | null = null;
+let initPromise: Promise<ReturnType<typeof rateLimit>> | null = null;
 
-async function getLimiter() {
-    if (limiter) return limiter;
+function getLimiter(): Promise<ReturnType<typeof rateLimit>> {
+    if (initPromise) return initPromise;
+    initPromise = createLimiter();
+    return initPromise;
+}
+
+async function createLimiter() {
     redisClient = new Redis(REDIS_URL);
+    redisClient.on('error', (err) => {
+        console.error('[campaignRateLimit] Redis error:', err);
+    });
     limiter = rateLimit({
         windowMs: 60 * 60 * 1000,
         max: 5,
