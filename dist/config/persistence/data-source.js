@@ -14,6 +14,7 @@ const wallet_entity_1 = __importDefault(require("../../components/v1/wallet/wall
 const distribution_entity_1 = __importDefault(require("../../components/v1/distribution/distribution.entity"));
 const feeConfig_entity_1 = __importDefault(require("../../components/v1/feeConfig/feeConfig.entity"));
 const user_entity_1 = __importDefault(require("src/components/v1/user/user.entity"));
+const campaign_entity_1 = require("../../components/v1/campaigns/campaign.entity");
 const { dbConfigs } = __1.default;
 const AppDataSource = new typeorm_1.DataSource({
     host: dbConfigs.DATABASE_HOST,
@@ -32,6 +33,7 @@ const AppDataSource = new typeorm_1.DataSource({
         distribution_entity_1.default,
         feeConfig_entity_1.default,
         user_entity_1.default,
+        campaign_entity_1.CampaignEntity,
     ],
     migrations: ["src/migrations/*.js"],
     ssl: {

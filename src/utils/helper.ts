@@ -31,6 +31,17 @@ export const isValidUserId = (userId: string) => {
     return isValidUUID || isValidULID || isValidCustomId;
 };
 
+export function u256FromString(value: string): { low: number; high: number } {
+    const big = BigInt(value);
+    const low = Number(big & BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'));
+    const high = Number(big >> 128n);
+    return { low, high };
+}
+
+export function isValidContractAddress(address: string): boolean {
+    return /^0x[0-9a-fA-F]{64}$/.test(address);
+}
+
 export function isValidBase64String(field: string) {
     // Regular expression for Base64 validation
     const base64Pattern =

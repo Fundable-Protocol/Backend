@@ -10,6 +10,7 @@ import WalletEntity from "../../components/v1/wallet/wallet.entity"
 import DistributionEntity from "../../components/v1/distribution/distribution.entity"
 import FeeConfigEntity from "../../components/v1/feeConfig/feeConfig.entity"
 import UserEntity from "src/components/v1/user/user.entity"
+import { CampaignEntity } from "../../components/v1/campaigns/campaign.entity"
 
 const { dbConfigs } = appConfigs
 
@@ -30,6 +31,7 @@ const AppDataSource = new DataSource({
     DistributionEntity,
     FeeConfigEntity,
     UserEntity,
+    CampaignEntity,
   ],
   migrations: ["src/migrations/*.js"],
   ssl: {
