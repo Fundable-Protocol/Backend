@@ -28,6 +28,7 @@ export interface IToken {
     sessionId: string;
     ref: number;
     role: string;
+    address: string;
 }
 
 export interface GenerateTokenArg {
