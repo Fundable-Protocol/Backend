@@ -99,6 +99,10 @@ const initializeRoutes = () => {
     app.use(errorHandlingMiddleware);
 };
 
+if (!appConfigs.authConfig.jwtSecret) {
+    throw new Error('JWT_SECRET environment variable must be set');
+}
+
 try {
     initializeDb();
     initializeMiddlewares();
