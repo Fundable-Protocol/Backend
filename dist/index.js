@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -10,10 +43,8 @@ const helmet_1 = __importDefault(require("helmet"));
 const cors_1 = __importDefault(require("cors"));
 const fingerprint_middleware_1 = __importDefault(require("./appMiddlewares/fingerprint.middleware"));
 const appMiddlewares_1 = require("./appMiddlewares");
-const routes_v1_1 = __importDefault(require("./components/v1/routes.v1"));
 const errorHandler_1 = require("./utils/errorHandler");
 const data_source_1 = __importDefault(require("./config/persistence/data-source"));
-const seeder_1 = __importDefault(require("./config/persistence/seeder"));
 const logger_1 = __importDefault(require("./utils/logger"));
 const config_1 = __importDefault(require("./config"));
 const app = (0, express_1.default)();
@@ -24,12 +55,7 @@ const rateLimiter = (0, express_rate_limit_1.default)({
     legacyHeaders: false,
 });
 const initializeDb = () => {
-    data_source_1.default.initialize()
-        .then(() => {
-        logger_1.default.info('DB Connected Successfully!!!');
-        (0, seeder_1.default)();
-    })
-        .catch(errorHandler_1.errorHandler.handleError);
+    return data_source_1.default.initialize();
 };
 const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
 const corsOptions = {
@@ -59,8 +85,10 @@ const initializeMiddlewares = () => {
         .use(express_1.default.urlencoded({ limit: '50kb', extended: false }))
         .use(appMiddlewares_1.verifyAllowedMethods);
 };
-const initializeRoutes = () => {
-    app.use('/v1/', routes_v1_1.default);
+const initializeRoutes = (routerV1, routerApiV1) => {
+    app.use('/v1/', routerV1);
+    if (routerApiV1)
+        app.use('/api/v1/', routerApiV1);
     // if (appConfigs.isProd || appConfigs.isStaging) {
     //     app.use(Sentry.Handlers.errorHandler());
     // }
@@ -75,19 +103,27 @@ const initializeRoutes = () => {
     // Use the error handling middleware
     app.use(errorHandler_1.errorHandlingMiddleware);
 };
-try {
-    initializeDb();
-    initializeMiddlewares();
-    initializeRoutes();
-}
-catch (error) {
-    errorHandler_1.errorHandler.handleError(error);
-}
-const port = config_1.default.port;
-app.listen(port, () => {
-    logger_1.default.info('[+]Logging Service Started');
-    logger_1.default.info(`[+] CLOUD Server Running ... on Port -> ${port}`);
-});
+const startServer = async () => {
+    try {
+        logger_1.default.info('Connecting to DB...');
+        await initializeDb();
+        logger_1.default.info('DB Connected Successfully!!!');
+        initializeMiddlewares();
+        const { default: routerV1 } = await Promise.resolve().then(() => __importStar(require('./components/v1/routes.v1')));
+        const { default: routerApiV1 } = await Promise.resolve().then(() => __importStar(require('./components/v1/routes.api.v1')));
+        initializeRoutes(routerV1, routerApiV1);
+        const port = config_1.default.port;
+        app.listen(port, () => {
+            logger_1.default.info('[+]Logging Service Started');
+            logger_1.default.info(`[+] CLOUD Server Running ... on Port -> ${port}`);
+        });
+    }
+    catch (error) {
+        errorHandler_1.errorHandler.handleError(error);
+        process.exit(1);
+    }
+};
+void startServer();
 process.on('uncaughtException', async (err) => {
     try {
         logger_1.default.log('error', '❌❌❌ ➡ ⬇⬇⬇ An Error occured -> UNCAUGHT EXCEPTION ERROR ⬇⬇⬇');

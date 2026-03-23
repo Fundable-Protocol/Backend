@@ -1,13 +1,12 @@
 import 'reflect-metadata';
 
 import expressRateLimiter from 'express-rate-limit';
-import express from 'express';
+import express, { type Router } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 
 import fingerprintMiddleware from './appMiddlewares/fingerprint.middleware';
 import { verifyAllowedMethods } from './appMiddlewares';
-import routerV1 from './components/v1/routes.v1';
 
 import {
     AppError,
@@ -15,7 +14,6 @@ import {
     errorHandlingMiddleware,
 } from './utils/errorHandler';
 import AppDataSource from './config/persistence/data-source';
-import initiateSeeding from './config/persistence/seeder';
 import logger from './utils/logger';
 import appConfigs from './config';
 
@@ -29,12 +27,7 @@ const rateLimiter = expressRateLimiter({
 });
 
 const initializeDb = () => {
-    AppDataSource.initialize()
-        .then(() => {
-            logger.info('DB Connected Successfully!!!');
-            initiateSeeding();
-        })
-        .catch(errorHandler.handleError);
+    return AppDataSource.initialize();
 };
 
 const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
@@ -74,8 +67,9 @@ const initializeMiddlewares = () => {
         .use(verifyAllowedMethods);
 };
 
-const initializeRoutes = () => {
+const initializeRoutes = (routerV1: Router, routerApiV1?: Router) => {
     app.use('/v1/', routerV1);
+    if (routerApiV1) app.use('/api/v1/', routerApiV1);
 
     // if (appConfigs.isProd || appConfigs.isStaging) {
     //     app.use(Sentry.Handlers.errorHandler());
@@ -99,20 +93,32 @@ const initializeRoutes = () => {
     app.use(errorHandlingMiddleware);
 };
 
-try {
-    initializeDb();
-    initializeMiddlewares();
-    initializeRoutes();
-} catch (error) {
-    errorHandler.handleError(error as AppError);
-}
+const startServer = async () => {
+    try {
+        logger.info('Connecting to DB...');
+        await initializeDb();
+        logger.info('DB Connected Successfully!!!');
 
-const port = appConfigs.port;
+        initializeMiddlewares();
 
-app.listen(port, () => {
-    logger.info('[+]Logging Service Started');
-    logger.info(`[+] CLOUD Server Running ... on Port -> ${port}`);
-});
+        const { default: routerV1 } = await import('./components/v1/routes.v1');
+        const { default: routerApiV1 } = await import(
+            './components/v1/routes.api.v1'
+        );
+        initializeRoutes(routerV1, routerApiV1);
+
+        const port = appConfigs.port;
+        app.listen(port, () => {
+            logger.info('[+]Logging Service Started');
+            logger.info(`[+] CLOUD Server Running ... on Port -> ${port}`);
+        });
+    } catch (error) {
+        errorHandler.handleError(error as AppError);
+        process.exit(1);
+    }
+};
+
+void startServer();
 
 process.on('uncaughtException', async (err) => {
     try {

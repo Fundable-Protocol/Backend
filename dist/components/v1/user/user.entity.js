@@ -16,6 +16,7 @@ let UserEntity = class UserEntity {
     id;
     username;
     email;
+    campaignCount;
     createdAt;
     updatedAt;
     generateId() {
@@ -37,6 +38,10 @@ __decorate([
     (0, typeorm_1.Column)("text", { nullable: false, unique: true }),
     __metadata("design:type", String)
 ], UserEntity.prototype, "email", void 0);
+__decorate([
+    (0, typeorm_1.Column)("integer", { name: "campaign_count", default: 0 }),
+    __metadata("design:type", Number)
+], UserEntity.prototype, "campaignCount", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)({
         name: "created_at",
