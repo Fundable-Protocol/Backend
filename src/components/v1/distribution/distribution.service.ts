@@ -1,6 +1,6 @@
 import type { Repository } from "typeorm"
 import type { DistributionEntity } from "./distribution.entity"
-import type { CreateDistributionDto, DistributionResponseDto } from "./distribution.dto"
+import type { CreateDistributionDto, DistributionResponseDto, UpdateDistributionDto } from "./distribution.dto"
 import { DistributionStatus, Network } from "../../../types/enums"
 
 export class DistributionService {
@@ -17,6 +17,35 @@ export class DistributionService {
     } catch (error) {
       console.error("Error creating distribution:", error)
       throw new Error("Failed to create distribution")
+    }
+  }
+
+  async updateDistribution(id: string, updateData: UpdateDistributionDto): Promise<DistributionResponseDto> {
+    try {
+      const distribution = await this.distributionRepository.findOne({ where: { id } })
+      if (!distribution) {
+        throw new Error("Distribution not found")
+      }
+
+      const updatedFields: Partial<DistributionEntity> = { ...updateData }
+
+      if (updateData.totalAmount || updateData.usdRate) {
+        const totalAmount = updateData.totalAmount ?? distribution.totalAmount
+        const usdRate = updateData.usdRate ?? distribution.usdRate
+        updatedFields.totalUsdAmount = this.calculateTotalUsdAmount(totalAmount, usdRate)
+      }
+
+      if (updateData.metadata) {
+        updatedFields.metadata = this.processMetadata(updateData.metadata)
+      }
+
+      Object.assign(distribution, updatedFields)
+      const savedDistribution = await this.distributionRepository.save(distribution)
+
+      return this.formatDistributionResponse(savedDistribution)
+    } catch (error) {
+      console.error("Error updating distribution:", error)
+      throw error instanceof Error ? error : new Error("Failed to update distribution")
     }
   }
 
