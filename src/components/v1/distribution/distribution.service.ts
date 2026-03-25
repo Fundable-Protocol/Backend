@@ -29,6 +29,16 @@ export class DistributionService {
 
       const updatedFields: Partial<DistributionEntity> = { ...updateData }
 
+      if (updateData.userAddress !== undefined) {
+        updatedFields.userAddress = updateData.userAddress.toLowerCase()
+      }
+      if (updateData.tokenAddress !== undefined) {
+        updatedFields.tokenAddress = updateData.tokenAddress.toLowerCase()
+      }
+      if (updateData.tokenSymbol !== undefined) {
+        updatedFields.tokenSymbol = updateData.tokenSymbol.toUpperCase()
+      }
+
       if (updateData.totalAmount || updateData.usdRate) {
         const totalAmount = updateData.totalAmount ?? distribution.totalAmount
         const usdRate = updateData.usdRate ?? distribution.usdRate
