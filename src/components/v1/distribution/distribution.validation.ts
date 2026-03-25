@@ -46,7 +46,7 @@ export const createDistributionSchema = z.object({
     })
     .optional(),
 
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.any()).nullable().optional(),
 })
 
 export const updateDistributionSchema = createDistributionSchema.partial().extend({

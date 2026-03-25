@@ -45,7 +45,9 @@ export class DistributionService {
         updatedFields.totalUsdAmount = this.calculateTotalUsdAmount(totalAmount, usdRate)
       }
 
-      if (updateData.metadata) {
+      if (updateData.metadata === null) {
+        updatedFields.metadata = null
+      } else if (updateData.metadata !== undefined) {
         updatedFields.metadata = this.processMetadata(updateData.metadata)
       }
 
