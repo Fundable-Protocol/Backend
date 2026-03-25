@@ -55,5 +55,9 @@ export const updateDistributionSchema = createDistributionSchema.partial().exten
   }).optional(),
 })
 
+export const updateDistributionParamsSchema = z.object({
+  id: z.string().uuid("id must be a valid UUID"),
+})
+
 export type CreateDistributionInput = z.infer<typeof createDistributionSchema>
 export type UpdateDistributionInput = z.infer<typeof updateDistributionSchema>

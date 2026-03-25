@@ -50,14 +50,13 @@ export const updateDistribution = async (req: Request, res: Response): Promise<v
   } catch (error) {
     console.error("Error in updateDistribution:", error)
 
+    const isNotFound = error instanceof Error && error.message === "Distribution not found"
+    const status = isNotFound ? 404 : 500
     const errorResponse: ApiResponse<null> = {
       data: null,
       success: false,
-      message: error instanceof Error ? error.message : "Internal server error",
+      message: isNotFound && error instanceof Error ? error.message : "Internal server error",
     }
-
-    const status = error instanceof Error && error.message === "Distribution not found" ? 404 : 500
     res.status(status).json(errorResponse)
   }
 }
-
