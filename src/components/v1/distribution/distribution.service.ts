@@ -1,3 +1,4 @@
+import { Decimal } from "decimal.js"
 import type { Repository } from "typeorm"
 import type { DistributionEntity } from "./distribution.entity"
 import type { CreateDistributionDto, DistributionResponseDto, UpdateDistributionDto } from "./distribution.dto"
@@ -110,10 +111,9 @@ export class DistributionService {
 
   private calculateTotalUsdAmount(totalAmount: string, usdRate: string): string {
     try {
-      const amount = Number.parseFloat(totalAmount)
-      const rate = Number.parseFloat(usdRate)
-      const totalUsd = amount * rate
-      return totalUsd.toString()
+      const amount = new Decimal(totalAmount)
+      const rate = new Decimal(usdRate)
+      return amount.mul(rate).toString()
     } catch (error) {
       console.warn("Error calculating total USD amount:", error)
       return "0"
