@@ -86,6 +86,12 @@ export interface IRequest extends Request {
     // file?: Request['file'];
     permissions?: string[];
     paginationData?: IPaginationData;
+    auth?: {
+        userId: string;
+        walletAddress?: string;
+        email?: string;
+        claims?: Record<string, unknown>;
+    };
 }
 
 export interface AppErrorAttributes {
