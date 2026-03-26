@@ -1,7 +1,8 @@
 import type { DistributionType, Network } from "../../../types/enums"
-import type { CreateDistributionInput } from "./distribution.validation"
+import type { CreateDistributionInput, UpdateDistributionInput } from "./distribution.validation"
 
 export type CreateDistributionDto = CreateDistributionInput
+export type UpdateDistributionDto = UpdateDistributionInput
 
 export interface DistributionResponseDto {
   id: string

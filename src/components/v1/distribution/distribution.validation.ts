@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { DistributionType, Network } from "../../../types/enums"
+import { DistributionType, DistributionStatus, Network } from "../../../types/enums"
 
 export class ValidationError extends Error {
   constructor(message: string) {
@@ -46,7 +46,18 @@ export const createDistributionSchema = z.object({
     })
     .optional(),
 
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.any()).nullable().optional(),
+})
+
+export const updateDistributionSchema = createDistributionSchema.partial().extend({
+  status: z.nativeEnum(DistributionStatus, {
+    errorMap: () => ({ message: "status must be a valid DistributionStatus" }),
+  }).optional(),
+})
+
+export const updateDistributionParamsSchema = z.object({
+  id: z.string().uuid("id must be a valid UUID"),
 })
 
 export type CreateDistributionInput = z.infer<typeof createDistributionSchema>
+export type UpdateDistributionInput = z.infer<typeof updateDistributionSchema>
