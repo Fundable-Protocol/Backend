@@ -84,7 +84,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], WalletEntity.prototype, "generateId", null);
 exports.WalletEntity = WalletEntity = __decorate([
-    (0, typeorm_1.Entity)("Wallet"),
+    (0, typeorm_1.Entity)("wallet"),
     (0, typeorm_1.Index)("Wallet_address_idx", ["address"]),
     (0, typeorm_1.Index)("Wallet_network_idx", ["network"])
 ], WalletEntity);

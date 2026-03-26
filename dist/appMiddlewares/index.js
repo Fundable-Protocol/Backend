@@ -5,7 +5,7 @@ const verifyAllowedMethods = (req, res, next) => {
     try {
         if (req.method === 'OPTIONS') {
             res.header('Access-Control-Allow-Methods', 'POST, PUT, PATCH, GET, DELETE');
-            return res.status(403).json('Invalid header method');
+            return res.sendStatus(204);
         }
         else
             return next();

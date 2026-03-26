@@ -8,13 +8,15 @@ import {
 import {
   createDistribution,
   updateDistribution,
+  listDistributions,
 } from "./distribution.controller"
 
 const distributionRouter = new EnhancedRouter()
 
-distributionRouter.post("/distributions", policyMiddleware(createDistributionSchema), createDistribution)
+distributionRouter.get("/", listDistributions)
+distributionRouter.post("/", policyMiddleware(createDistributionSchema), createDistribution)
 distributionRouter.patch(
-  "/distributions/:id",
+  "/:id",
   policyMiddleware(updateDistributionParamsSchema, "params"),
   policyMiddleware(updateDistributionSchema),
   updateDistribution,

@@ -61,6 +61,20 @@ export class DistributionService {
     }
   }
 
+  async listDistributions(limit = 50): Promise<DistributionResponseDto[]> {
+    try {
+      const distributions = await this.distributionRepository.find({
+        order: { createdAt: "DESC" as const },
+        take: Math.min(Math.max(limit, 1), 200),
+      })
+
+      return distributions.map((d) => this.formatDistributionResponse(d))
+    } catch (error) {
+      console.error("Error listing distributions:", error)
+      throw new Error("Failed to list distributions")
+    }
+  }
+
   private prepareDistributionData(data: CreateDistributionDto): Partial<DistributionEntity> {
     const distributionData: Partial<DistributionEntity> = {
       userAddress: data.userAddress.toLowerCase(),

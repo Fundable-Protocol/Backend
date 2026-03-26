@@ -15,7 +15,6 @@ const platformConstants_1 = __importDefault(require("../../../../config/platform
 const data_source_1 = __importDefault(require("../../../../config/persistence/data-source"));
 const platform_utils_1 = require("../platform.utils");
 const permission_services_1 = __importDefault(require("../platformServices/permission.services"));
-const useraccess_services_1 = __importDefault(require("../../auth/authServices/useraccess.services"));
 const addPermissions = async (req, res) => {
     const { permissions } = req.body;
     const permissionNames = permissions.map((perm) => perm.name);
@@ -147,12 +146,6 @@ const deleteRole = async (req, res) => {
     });
     if (!roleExist) {
         throw new errorHandler_1.NotFoundError(responseMessages_1.default.dataNotExist('Role'));
-    }
-    const userAccessExists = await useraccess_services_1.default.findOne({
-        where: { Role: { id: +roleId } },
-    });
-    if (userAccessExists) {
-        throw new errorHandler_1.InvalidRequestError('This role cannot be deleted, it has an existing user(s).');
     }
     await role_services_1.default.delete({ id: +roleId });
     return (0, helper_1.handleResponse)(res, {
