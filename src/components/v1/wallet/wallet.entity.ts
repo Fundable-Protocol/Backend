@@ -2,7 +2,7 @@ import { Entity, Column, PrimaryColumn, CreateDateColumn, UpdateDateColumn, Inde
 import { uuid } from "../../../utils"
 import { Network } from "../../../types/enums"
 
-@Entity("Wallet")
+@Entity("wallet")
 @Index("Wallet_address_idx", ["address"])
 @Index("Wallet_network_idx", ["network"])
 export class WalletEntity {

@@ -12,7 +12,7 @@ export const verifyAllowedMethods = (
                 'POST, PUT, PATCH, GET, DELETE'
             );
 
-            return res.status(403).json('Invalid header method');
+            return res.sendStatus(204);
         } else return next();
     } catch (err) {
         return next(err);

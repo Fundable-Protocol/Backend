@@ -1,8 +1,8 @@
 import { ulid as ulidx } from 'ulidx';
 import { randomUUID } from 'crypto';
 import { z } from 'zod';
+import type { EntityManager } from 'typeorm';
 
-import AppDataSource from '../config/persistence/data-source';
 import { IRequest } from '../types/global';
 
 export const isValidUuid = (uuid: string): boolean => {
@@ -16,9 +16,13 @@ export const isValidUuid = (uuid: string): boolean => {
  */
 export async function executeTransaction<T>(
     transactionCallback: (
-        _transactionManager: typeof AppDataSource.manager
+        _transactionManager: EntityManager
     ) => Promise<T>
 ): Promise<T> {
+    const { default: AppDataSource } = await import(
+        '../config/persistence/data-source'
+    );
+
     return AppDataSource.transaction(async (transactionManager) => {
         try {
             return await transactionCallback(transactionManager);

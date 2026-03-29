@@ -13,6 +13,9 @@ export class UserEntity {
   @Column("text", { nullable: false, unique: true })
   email: string
 
+  @Column("integer", { name: "campaign_count", default: 0 })
+  campaignCount: number
+
   @CreateDateColumn({
     name: "created_at",
     type: "timestamp",

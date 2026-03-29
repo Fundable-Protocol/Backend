@@ -1,6 +1,5 @@
 import { z } from "zod"
 import { Network } from "../../../types/enums"
-import { ValidationError } from "./path-to-validation-error" // reuse if needed
 
 const ethereumAddressRegex = /^0x[a-fA-F0-9]{40}$/
 const decimalStringRegex = /^\d+(\.\d+)?$/

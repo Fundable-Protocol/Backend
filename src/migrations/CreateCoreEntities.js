@@ -69,18 +69,30 @@ module.exports = class CreateCoreEntities1703000000000 {
       )
     `)
 
-    // Update Wallet table
+    // Ensure Wallet table exists (this repo snapshot does not include an earlier wallet migration)
     await queryRunner.query(`
-      ALTER TABLE "wallet" ADD COLUMN "network" "network" NOT NULL DEFAULT 'mainnet'
+      CREATE TABLE IF NOT EXISTS "wallet" (
+        "id" text NOT NULL,
+        "address" text NOT NULL,
+        "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT "UQ_wallet_address" UNIQUE ("address"),
+        CONSTRAINT "PK_wallet_id" PRIMARY KEY ("id")
+      )
+    `)
+
+    // Update Wallet table (backwards compatible)
+    await queryRunner.query(`
+      ALTER TABLE "wallet" ADD COLUMN IF NOT EXISTS "network" "network" NOT NULL DEFAULT 'mainnet'
     `)
     await queryRunner.query(`
-      ALTER TABLE "wallet" ADD COLUMN "chain_id" text NOT NULL DEFAULT ''
+      ALTER TABLE "wallet" ADD COLUMN IF NOT EXISTS "chain_id" text NOT NULL DEFAULT ''
     `)
     await queryRunner.query(`
-      ALTER TABLE "wallet" ADD COLUMN "chain_name" text NOT NULL DEFAULT ''
+      ALTER TABLE "wallet" ADD COLUMN IF NOT EXISTS "chain_name" text NOT NULL DEFAULT ''
     `)
     await queryRunner.query(`
-      ALTER TABLE "wallet" ADD COLUMN "balance" decimal(65,30) DEFAULT '0'
+      ALTER TABLE "wallet" ADD COLUMN IF NOT EXISTS "balance" decimal(65,30) DEFAULT '0'
     `)
 
     // Create indexes

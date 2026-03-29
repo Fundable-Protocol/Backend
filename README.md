@@ -184,10 +184,50 @@ src/
 To run tests, use the following command:
 
 ```bash
-pnpm test
+npm test
 ```
 
-Tests are located in the `__tests__` folder and use a library like **Jest** for unit and integration tests.
+Tests are located in `src/__tests__` and run with Node's test runner (`node --test`) + coverage (`c8`).
+
+---
+
+## API: Create Campaign (Cairo)
+
+**POST** `/api/v1/campaigns` (JWT required)
+
+Request body:
+
+```json
+{
+  "campaign_ref": "ABCDE",
+  "target_amount": "1000",
+  "donation_token": "0x1"
+}
+```
+
+Notes:
+
+- Rate limit: max **5** campaign creations per user per hour.
+- Auth: send `Authorization: Bearer <JWT>` and include a `walletAddress` (or `address`) claim in the token.
+
+### Cairo/StarkNet config (non-mock)
+
+Set these env vars to enable real on-chain calls:
+
+- `CAIRO_RPC_URL`
+- `CAIRO_ACCOUNT_ADDRESS`
+- `CAIRO_PRIVATE_KEY`
+- `CAIRO_FACTORY_CONTRACT_ADDRESS`
+
+Optional:
+
+- `CAMPAIGN_CREATED_EVENT_KEY` (event key to extract `campaign_id` from the tx receipt; otherwise falls back to tx hash)
+
+### Mock mode (local)
+
+For local development without a chain connection:
+
+- `CAIRO_MOCK=true`
 
 ---
 

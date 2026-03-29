@@ -25,7 +25,6 @@ import platformConstants from '../../../../config/platformConstants';
 import AppDataSource from '../../../../config/persistence/data-source';
 import { mapPermissions, transformPermissions } from '../platform.utils';
 import permissionRepository from '../platformServices/permission.services';
-import userAccessRepository from '../../auth/authServices/useraccess.services';
 
 export const addPermissions = async (req: IRequest, res: Response) => {
     const { permissions }: z.infer<typeof addPermissionSchema> = req.body;
@@ -225,16 +224,6 @@ export const deleteRole = async (req: IRequest, res: Response) => {
 
     if (!roleExist) {
         throw new NotFoundError(responseMessages.dataNotExist('Role'));
-    }
-
-    const userAccessExists = await userAccessRepository.findOne({
-        where: { Role: { id: +roleId } },
-    });
-
-    if (userAccessExists) {
-        throw new InvalidRequestError(
-            'This role cannot be deleted, it has an existing user(s).'
-        );
     }
 
     await roleRepository.delete({ id: +roleId });

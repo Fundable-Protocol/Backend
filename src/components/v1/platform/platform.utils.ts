@@ -1,4 +1,4 @@
-import { NextFunction } from 'express';
+import { NextFunction, Response } from 'express';
 
 import { IRequest } from '../../../types/global';
 import { InvalidRequestError } from '../../../utils/errorHandler';
