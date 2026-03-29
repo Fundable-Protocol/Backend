@@ -28,23 +28,49 @@ Ensure you have the following installed on your system:
 
 ---
 
-## Installation
+## Development Setup
 
-1. Clone the repository:
+### Prerequisites
+- [Docker](https://docs.docker.com/get-docker/) and Docker Compose
+- Node.js 20+
 
-    ```bash
-    git clone git@github.com:Fundable-Protocol/Backend.git
-    cd (folder path)
-    ```
+### First-time setup
+```bash
+# 1. Copy environment config
+cp .env.example .env
 
-2. Install dependencies:
+# 2. Start database + run migrations in one command
+make setup
+# or without Make:
+npm run setup
 
-    ```bash
-    pnpm install
+# 3. Start the dev server
+npm run dev
+```
 
-    ```
+### Daily workflow
+```bash
+make db          # start database
+npm run dev      # start API
 
----
+make db-stop     # stop database when done
+make db-reset    # wipe all data and start fresh
+```
+
+### Migrations
+```bash
+# Run pending migrations
+make migrate
+
+# Revert last migration
+make migrate-revert
+
+# Generate a new migration
+make migration-new name=AddWalletTable
+
+# Run migrations without local Node (uses Docker)
+make migrate-docker
+```
 
 ## Configuration
 
@@ -204,5 +230,6 @@ For local development without a chain connection:
 - `CAIRO_MOCK=true`
 
 ---
+
 
 ### Any challenges? Reach out!

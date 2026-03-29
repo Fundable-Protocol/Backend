@@ -1,0 +1,50 @@
+.PHONY: db db-stop db-reset migrate migrate-revert db-logs migration-new
+
+# ── Database ────────────────────────────────────────────────────────────────
+
+## Start the database container
+db:
+	docker compose up -d db
+	@echo "✅ Database running on localhost:5432"
+
+## Stop all containers
+db-stop:
+	docker compose down
+
+## Wipe the volume and restart fresh (destructive!)
+db-reset:
+	docker compose down -v
+	docker compose up -d db
+	@echo "✅ Database reset — all data wiped"
+
+## Tail database logs
+db-logs:
+	docker compose logs -f db
+
+# ── Migrations ───────────────────────────────────────────────────────────────
+
+## Run pending migrations (requires local Node + typeorm)
+migrate:
+	npx typeorm migration:run -d src/config/persistence
+
+## Revert the last migration
+migrate-revert:
+	npx typeorm migration:revert -d src/config/persistence
+
+## Run migrations inside Docker (no local Node needed)
+migrate-docker:
+	docker compose --profile migrate up migrate --abort-on-container-exit
+
+## Generate a new migration file
+## Usage: make migration-new name=AddUsersTable
+migration-new:
+	npx ts-node src/scripts/generate-migration.ts $(name)
+
+# ── App ──────────────────────────────────────────────────────────────────────
+
+## Full first-time setup: start DB then run migrations
+setup: db
+	@echo "⏳ Waiting for database to be healthy..."
+	@sleep 3
+	$(MAKE) migrate
+	@echo "✅ Setup complete — run: npm run dev"
