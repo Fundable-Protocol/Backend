@@ -1,0 +1,20 @@
+{
+  "name": "@fundable-indexer/distributions",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "codegen": "bun --print \"'distributions: no codegen configured yet'\"",
+    "dev": "bun --watch src/index.ts",
+    "lint": "biome check .",
+    "test": "vitest run src",
+    "type-check": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@fundable-indexer/common": "workspace:*"
+  }
+}

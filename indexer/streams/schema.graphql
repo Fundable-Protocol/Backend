@@ -1,0 +1,11 @@
+type Stream {
+  id: ID!
+}
+
+type WithdrawalAction {
+  id: ID!
+}
+
+type CancelAction {
+  id: ID!
+}

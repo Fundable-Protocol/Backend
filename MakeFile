@@ -23,22 +23,22 @@ db-logs:
 
 # ── Migrations ───────────────────────────────────────────────────────────────
 
-## Run pending migrations (requires local Node + typeorm)
+## Run pending migrations
 migrate:
-	npx typeorm migration:run -d src/config/persistence
+	bunx typeorm migration:run -d src/config/persistence
 
 ## Revert the last migration
 migrate-revert:
-	npx typeorm migration:revert -d src/config/persistence
+	bunx typeorm migration:revert -d src/config/persistence
 
-## Run migrations inside Docker (no local Node needed)
+## Run migrations inside Docker
 migrate-docker:
 	docker compose --profile migrate up migrate --abort-on-container-exit
 
 ## Generate a new migration file
 ## Usage: make migration-new name=AddUsersTable
 migration-new:
-	npx ts-node src/scripts/generate-migration.ts $(name)
+	bunx tsx src/scripts/generate-migration.ts $(name)
 
 # ── App ──────────────────────────────────────────────────────────────────────
 
@@ -47,4 +47,4 @@ setup: db
 	@echo "⏳ Waiting for database to be healthy..."
 	@sleep 3
 	$(MAKE) migrate
-	@echo "✅ Setup complete — run: npm run dev"
+	@echo "✅ Setup complete — run: bun run dev"

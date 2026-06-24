@@ -1,0 +1,26 @@
+set shell := ["bash", "-cu"]
+
+build:
+    bun run build
+
+codegen:
+    bun run codegen
+
+dev:
+    bun run dev
+
+format:
+    bun run format
+
+lint:
+    bun run lint
+
+start:
+    bun run start
+
+test:
+    bun run test
+
+type-check:
+    bun run type-check
+

@@ -1,0 +1,7 @@
+type DistributionBatch {
+  id: ID!
+}
+
+type ClaimAction {
+  id: ID!
+}

@@ -1,7 +1,16 @@
 .env
 node_modules
-docs
+.turbo
+**/.turbo
+dist
+docs/*
+!docs/plans/
+!docs/plans/**
 scripts
+!indexer/scripts/
+!indexer/scripts/**
+indexer/docs
+indexer/**/dist
 coverage
 coverage/**
 *.log

@@ -1,17 +1,18 @@
-# Fundable Backend API
+# Fundable Backend
 
-This server is built on **TypeScript**, **Node.js**, **Express**, **PostgreSQL**, and **TypeORM**. It contains a clean, organized structure, while incorporating best practices such as type safety, database integration, and robust configurations.
+This repository contains the Fundable Backend API and the Fundable Soroban
+indexer scaffold. The API lives in `src/`; the indexer workspace lives in
+`indexer/`. The repository uses **Bun** for package management and script
+execution.
 
 ## Technologies Used
 
--   Built with **TypeScript** for type safety and better developer experience.
--   **Express** as the web framework.
--   **PostgreSQL** database integration via **TypeORM**.
--   Environment-based configurations.
--   Scalable folder structure.
--   Middleware for request validation and error handling.
--   Support for database migrations.
--   Lightweight and ready for production deployment.
+- TypeScript
+- Bun
+- Express
+- PostgreSQL and TypeORM
+- Node's built-in test runner with `c8` coverage
+- Turborepo, Vitest, and Biome for the indexer workspace
 
 ---
 
@@ -19,20 +20,14 @@ This server is built on **TypeScript**, **Node.js**, **Express**, **PostgreSQL**
 
 Ensure you have the following installed on your system:
 
--   **Node.js** (v20.x or above)
--   **pnpm** (for dependency management)
--   **PostgreSQL** (v14.x or above)
--   **Git** (optional, for version control)
--   **ESLint**: Linting for maintaining code quality.
--   **Jest**: Unit testing framework.
+- Node.js 22.x
+- Bun 1.3.8
+- PostgreSQL 14+
+- Docker and Docker Compose for local database workflows
 
 ---
 
 ## Development Setup
-
-### Prerequisites
-- [Docker](https://docs.docker.com/get-docker/) and Docker Compose
-- Node.js 20+
 
 ### First-time setup
 ```bash
@@ -42,16 +37,16 @@ cp .env.example .env
 # 2. Start database + run migrations in one command
 make setup
 # or without Make:
-npm run setup
+bun run setup
 
 # 3. Start the dev server
-npm run dev
+bun run dev
 ```
 
 ### Daily workflow
 ```bash
 make db          # start database
-npm run dev      # start API
+bun run dev      # start API
 
 make db-stop     # stop database when done
 make db-reset    # wipe all data and start fresh
@@ -74,17 +69,10 @@ make migrate-docker
 
 ## Configuration
 
-```bash
-cp .env.example .env
-```
+Copy `.env.example` to `.env` and edit values for your local environment.
 
-Run this command to copy .env `cp .env.example .env` file in the project root and populate it with your environment-specific variables. Use the example below as a reference:
-
-# Server
-
-PORT=8002
-NODE_ENV=one of these: local_dev | dev | staging | prod
-Database=check credentials in env, and setup local db accordingly
+The same root `.env.example` contains Backend API settings, Cairo/StarkNet
+settings, and Soroban indexer settings.
 
 > Ensure sensitive keys are not committed to version control.
 
@@ -95,14 +83,30 @@ Database=check credentials in env, and setup local db accordingly
 1. Start the development server:
 
     ```bash
-    pnpm dev (This will start the API server with hot reloading enabled.)
+    bun run dev (This will start the API server with hot reloading enabled.)
     ```
 
-2. To build and run for production: pnpm build && pnpm start
+2. To build and run for production: `bun run build && bun run start`
 
 ---
 
 ## Folder Structure
+
+```plaintext
+.
+├── src/                                # Express Backend API
+├── indexer/                            # Soroban indexer workspace
+│   ├── common/                         # Shared indexer infrastructure
+│   ├── streams/                        # Payment stream indexer domain
+│   └── distributions/                  # Distribution indexer domain
+├── .github/                            # PR and issue templates
+├── docs/plans/                         # Design and implementation plans
+├── docker-compose.yml
+├── package.json
+└── bun.lock
+```
+
+API source layout:
 
 ```plaintext
 src/
@@ -138,13 +142,13 @@ src/
 2. Run migrations to set up the database schema:
 
     ```bash
-    pnpm run-migration
+    bun run run-migration
     ```
 
 3. If you need to create a new migration:
 
     ```bash
-    pnpm generate-migration <MigrationName>
+    bun run generate-migration <MigrationName>
     ```
 
 ---
@@ -173,8 +177,8 @@ src/
 2. Generate and run the migration for the new entity:
 
     ```bash
-    pnpm generate-migration <MigrationName>
-    pnpm run-migration
+    bun run generate-migration <MigrationName>
+    bun run run-migration
     ```
 
 ---
@@ -184,10 +188,36 @@ src/
 To run tests, use the following command:
 
 ```bash
-npm test
+bun run test
 ```
 
 Tests are located in `src/__tests__` and run with Node's test runner (`node --test`) + coverage (`c8`).
+
+## Indexer
+
+The Fundable Soroban indexer lives in `indexer/`. It is a Bun/Turborepo
+workspace with:
+
+- `indexer/common`: shared indexer infrastructure.
+- `indexer/streams`: payment stream indexer domain.
+- `indexer/distributions`: token distribution indexer domain.
+
+Useful commands from the repository root:
+
+```bash
+bun run indexer:type-check
+bun run indexer:test
+bun run indexer:lint
+```
+
+Read `indexer/README.md` and `indexer/INDEXER_GUIDELINES.md` before working on
+indexer issues.
+
+## Contributing
+
+Read `CONTRIBUTING.md` and use the root `.github` issue and PR templates. They
+cover both Backend API and indexer work. Keep PRs scoped to one issue, avoid
+generated files, and run the verification commands listed in the PR template.
 
 ---
 
