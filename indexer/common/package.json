@@ -13,5 +13,14 @@
     "lint": "biome check .",
     "test": "vitest run src",
     "type-check": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@stellar/stellar-sdk": "^12.0.0",
+    "pg": "^8.11.3",
+    "typeorm": "^0.3.20",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.0"
   }
 }
