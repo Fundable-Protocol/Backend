@@ -34,6 +34,31 @@ Required event identity fields:
 Database writes that represent indexed events should use unique constraints or
 equivalent conflict handling based on this identity.
 
+### Indexed Event Schema
+
+The `indexed_event` table provides deterministic identity storage with the
+following schema:
+
+```sql
+CREATE TABLE indexed_event (
+    id TEXT PRIMARY KEY,
+    contract_id TEXT NOT NULL,
+    ledger_number BIGINT NOT NULL,
+    transaction_hash TEXT NOT NULL,
+    event_index INTEGER NOT NULL,
+    event_data JSONB NOT NULL,
+    event_topics JSONB NOT NULL,
+    processed_by TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Deterministic identity constraint
+    UNIQUE(contract_id, ledger_number, transaction_hash, event_index)
+);
+```
+
+Use the `IndexedEventRepository.insertSafely()` method for idempotent event
+storage that handles duplicate detection automatically.
+
 ## Cursor Safety
 
 Cursors represent indexed progress and must be conservative:

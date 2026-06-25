@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./db": "./src/db/index.ts"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -13,5 +14,9 @@
     "lint": "biome check .",
     "test": "vitest run src",
     "type-check": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "typeorm": "^0.3.20",
+    "ulidx": "^2.4.1"
   }
 }
