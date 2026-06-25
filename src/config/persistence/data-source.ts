@@ -15,6 +15,7 @@ import FeeConfigEntity from '../../components/v1/feeConfig/feeConfig.entity';
 import UserEntity from '../../components/v1/user/user.entity';
 import CampaignEntity from '../../components/v1/campaign/campaign.entity';
 import AuditLogEntity from '../../components/v1/audit/auditLog.entity';
+import { IndexedEventEntity } from '../../../indexer/common/src/db/indexed-event.entity';
 
 const { dbConfigs } = appConfigs;
 
@@ -56,6 +57,7 @@ const AppDataSource = new DataSource({
         UserEntity,
         CampaignEntity,
         AuditLogEntity,
+        IndexedEventEntity,
     ],
     migrations: ['src/migrations/*.js'],
     ...(appConfigs.isProd || appConfigs.isStaging
