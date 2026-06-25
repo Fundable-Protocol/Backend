@@ -3,7 +3,9 @@
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": "src",
-    "tsBuildInfoFile": "dist/.tsbuildinfo"
+    "tsBuildInfoFile": "dist/.tsbuildinfo",
+    "lib": ["ES2023"],
+    "types": ["node", "vitest/globals"]
   },
   "include": ["src/**/*.ts"]
 }

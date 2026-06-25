@@ -34,6 +34,7 @@
     "test": "c8 --check-coverage --lines 90 --statements 90 --functions 90 node --import tsx --test 'src/**/*.test.ts'",
     "type-check": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --fix",
+    "indexer:db:migrate": "cd indexer/common && bun run db:migrate",
     "indexer:build": "turbo run build --filter=@fundable-indexer/common --filter=@fundable-indexer/streams --filter=@fundable-indexer/distributions",
     "indexer:codegen": "turbo run codegen --filter=@fundable-indexer/common --filter=@fundable-indexer/streams --filter=@fundable-indexer/distributions",
     "indexer:dev": "turbo run dev --parallel --filter=@fundable-indexer/common --filter=@fundable-indexer/streams --filter=@fundable-indexer/distributions",

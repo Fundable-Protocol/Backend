@@ -9,9 +9,16 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "codegen": "bun --print \"'common: no codegen configured yet'\"",
+    "db:migrate": "bun run src/db/migrate.ts",
     "dev": "bun --watch src/index.ts",
     "lint": "biome check .",
     "test": "vitest run src",
     "type-check": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "postgres": "3.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.21"
   }
 }
