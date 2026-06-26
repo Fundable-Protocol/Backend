@@ -10,6 +10,8 @@ export default [
             'dist/**',
             'coverage/**',
             'src/migrations/**',
+            // The indexer is a separate workspace linted by Biome (bun run indexer:lint).
+            'indexer/**',
         ],
     },
     { files: ['**/*.{js,mjs,cjs,ts}'] },
