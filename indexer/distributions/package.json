@@ -15,6 +15,7 @@
     "type-check": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@fundable-indexer/common": "workspace:*"
+    "@fundable-indexer/common": "workspace:*",
+    "typeorm": "^0.3.20"
   }
 }

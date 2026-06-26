@@ -43,6 +43,9 @@ Indexer environment variables are documented in the repository root
 
 ## Status
 
-This workspace is currently a scaffold. The poller, database repositories,
-cursor persistence, event handlers, and GraphQL API are planned but not yet
-implemented.
+This workspace is currently a scaffold. The poller, cursor persistence,
+event handlers, and GraphQL API are planned but not yet implemented.
+
+The distributions domain database schema (`distribution_batch`, `claim_action`)
+is defined under `distributions/src/db/` with a SQL migration in
+`common/src/db/migrations/0002_create_distributions_schema.sql`.
