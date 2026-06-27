@@ -19,15 +19,38 @@ export function parseStreamCreatedPayload(event: StreamCreatedEvent): StreamCrea
     );
   }
 
-  const parsed = JSON.parse(event.data) as StreamCreatedPayload;
+  let parsed: Record<string, unknown>;
+  try {
+    parsed = JSON.parse(event.data) as Record<string, unknown>;
+  } catch {
+    throw new Error("Failed to parse event data: invalid JSON");
+  }
+
+  const requiredFields = [
+    "streamId",
+    "sender",
+    "recipient",
+    "amount",
+    "startTime",
+    "endTime",
+  ] as const;
+
+  for (const field of requiredFields) {
+    const value = parsed[field];
+    if (typeof value !== "string" || value.length === 0) {
+      throw new Error(
+        `Invalid payload: "${field}" must be a non-empty string, got ${typeof value === "string" ? "empty string" : typeof value}`,
+      );
+    }
+  }
 
   return {
-    streamId: parsed.streamId,
-    sender: parsed.sender,
-    recipient: parsed.recipient,
-    amount: parsed.amount,
-    startTime: parsed.startTime,
-    endTime: parsed.endTime,
+    streamId: parsed.streamId as string,
+    sender: parsed.sender as string,
+    recipient: parsed.recipient as string,
+    amount: parsed.amount as string,
+    startTime: parsed.startTime as string,
+    endTime: parsed.endTime as string,
   };
 }
 

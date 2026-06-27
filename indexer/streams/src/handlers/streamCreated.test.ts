@@ -60,6 +60,43 @@ describe("parseStreamCreatedPayload", () => {
       "Expected StreamCreated event topic, got undefined",
     );
   });
+
+  test("throws on invalid JSON data", () => {
+    const event = createMockEvent({ data: "not-json" });
+
+    expect(() => parseStreamCreatedPayload(event)).toThrow(
+      "Failed to parse event data: invalid JSON",
+    );
+  });
+
+  test("throws on missing streamId field", () => {
+    const { streamId: _, ...partial } = mockPayload;
+    const event = createMockEvent({ data: JSON.stringify(partial) });
+
+    expect(() => parseStreamCreatedPayload(event)).toThrow(
+      'Invalid payload: "streamId" must be a non-empty string',
+    );
+  });
+
+  test("throws on non-string amount field", () => {
+    const event = createMockEvent({
+      data: JSON.stringify({ ...mockPayload, amount: 12345 }),
+    });
+
+    expect(() => parseStreamCreatedPayload(event)).toThrow(
+      'Invalid payload: "amount" must be a non-empty string',
+    );
+  });
+
+  test("throws on empty string recipient", () => {
+    const event = createMockEvent({
+      data: JSON.stringify({ ...mockPayload, recipient: "" }),
+    });
+
+    expect(() => parseStreamCreatedPayload(event)).toThrow(
+      'Invalid payload: "recipient" must be a non-empty string',
+    );
+  });
 });
 
 describe("getEventIdentity", () => {
