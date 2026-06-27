@@ -1,7 +1,86 @@
+enum DistributionStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
 type DistributionBatch {
   id: ID!
+  contractId: String!
+  distributor: String!
+  token: String!
+  totalAmount: String!
+  claimedAmount: String!
+  recipientCount: Int!
+  status: DistributionStatus!
+  pausedAt: String
+  resumedAt: String
+  uniqueRef: String!
+  ledgerNumber: Int!
+  txHash: String!
+  claims: [ClaimAction!]!
+  createdAt: String!
+  updatedAt: String!
 }
 
 type ClaimAction {
   id: ID!
+  batchId: ID!
+  claimant: String!
+  amount: String!
+  txHash: String!
+  ledgerNumber: Int!
+  eventTimestamp: String!
+  createdAt: String!
+}
+
+input DistributionFilterInput {
+  distributor: String
+  token: String
+  status: DistributionStatus
+  contractId: String
+}
+
+input ClaimFilterInput {
+  batchId: ID
+  claimant: String
+}
+
+input PaginationInput {
+  first: Int
+  after: String
+}
+
+type DistributionConnection {
+  nodes: [DistributionBatch!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type ClaimConnection {
+  nodes: [ClaimAction!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  endCursor: String
+}
+
+type Query {
+  distributionBatch(id: ID!): DistributionBatch
+  distributionBatches(
+    filter: DistributionFilterInput
+    pagination: PaginationInput
+  ): DistributionConnection!
+  distributionBatchesByDistributor(
+    distributor: String!
+    pagination: PaginationInput
+  ): DistributionConnection!
+  claimAction(id: ID!): ClaimAction
+  claims(filter: ClaimFilterInput, pagination: PaginationInput): ClaimConnection!
+  claimsByClaimant(claimant: String!, pagination: PaginationInput): ClaimConnection!
+  claimsByBatch(batchId: ID!, pagination: PaginationInput): ClaimConnection!
 }
