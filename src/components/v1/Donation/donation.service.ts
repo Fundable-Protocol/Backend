@@ -4,6 +4,8 @@ import type { DonationEntity } from './donation.entity';
 import type {
     CreateDonationInput,
     ListDonationsQuery,
+} from './donation.validation';
+import type {
     DonationResponseDto,
     PaginatedResponse,
     DonationStatsDto,
