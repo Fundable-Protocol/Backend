@@ -5,3 +5,5 @@ export const distributionsPackage = {
   role: "distribution-indexer",
   common: commonPackage.name,
 } as const;
+
+export * from "./handlers/index.js";
