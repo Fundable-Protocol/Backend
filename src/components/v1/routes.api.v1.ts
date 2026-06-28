@@ -1,6 +1,9 @@
 import EnhancedRouter from '../../utils/enhancedRouter';
 import policyMiddleware from '../../appMiddlewares/policy.middleware';
-import { requireJwtAuthApi } from '../../appMiddlewares/jwtAuth.api';
+import {
+    requireJwtAuthApi,
+    requireSelfOrAdmin,
+} from '../../appMiddlewares/jwtAuth.api';
 
 import campaignRoutes from './campaign/campaign.routes';
 import donationRoutes from './Donation/donation.routes';
@@ -33,6 +36,7 @@ router.get(
 router.get(
     '/users/:userId/donations',
     requireJwtAuthApi,
+    requireSelfOrAdmin,
     policyMiddleware(listUserDonationsQuerySchema, 'query'),
     getUserDonations
 );

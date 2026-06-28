@@ -5,15 +5,41 @@ import { DonationService } from '../components/v1/Donation/donation.service';
 import type { DonationEntity } from '../components/v1/Donation/donation.entity';
 import { DonationStatus } from '../types/enums';
 
-const extractColName = (clause: string): string | null => {
-    const match = clause.match(/\.(\w+)\s*=/);
-    return match ? match[1] : null;
+type PredicateOp = '=' | '!=' | '>=' | '<=' | 'ILIKE';
+
+const parseClause = (
+    clause: string
+): { col: string; op: PredicateOp } | null => {
+    const match = clause.match(/\.(\w+)\s*(!?=|>=|<=|ILIKE)/);
+    if (!match) return null;
+    return { col: match[1], op: match[2] as PredicateOp };
 };
 
 type MockWhereEntry = {
     col: string | null;
+    op: PredicateOp;
     paramKey: string;
     value: any;
+};
+
+const matchesWhere = (item: any, entry: MockWhereEntry): boolean => {
+    const col = entry.col ?? entry.paramKey;
+    const val = item[col];
+    switch (entry.op) {
+        case '=':
+            return val === entry.value;
+        case '!=':
+            return val !== entry.value;
+        case '>=':
+            return Number(val) >= Number(entry.value);
+        case '<=':
+            return Number(val) <= Number(entry.value);
+        case 'ILIKE': {
+            if (typeof val !== 'string') return false;
+            const pattern = (entry.value as string).replace(/%/g, '');
+            return val.toLowerCase().includes(pattern.toLowerCase());
+        }
+    }
 };
 
 type MockQueryBuilder = {
@@ -44,17 +70,21 @@ const makeMockQB = (data: () => any[]): MockQueryBuilder => {
         _take: null,
 
         where(clause: string, params: Record<string, any>) {
+            const parsed = parseClause(clause);
             mock._wheres = Object.entries(params).map(([key, value]) => ({
-                col: extractColName(clause),
+                col: parsed?.col ?? null,
+                op: parsed?.op ?? '=',
                 paramKey: key,
                 value,
             }));
             return mock;
         },
         andWhere(clause: string, params: Record<string, any>) {
+            const parsed = parseClause(clause);
             for (const [key, value] of Object.entries(params)) {
                 mock._wheres.push({
-                    col: extractColName(clause),
+                    col: parsed?.col ?? null,
+                    op: parsed?.op ?? '=',
                     paramKey: key,
                     value,
                 });
@@ -75,22 +105,14 @@ const makeMockQB = (data: () => any[]): MockQueryBuilder => {
         },
         async getCount() {
             const items = data();
-            return items.filter((item) => {
-                for (const entry of mock._wheres) {
-                    const col = entry.col ?? entry.paramKey;
-                    if ((item as any)[col] !== entry.value) return false;
-                }
-                return true;
-            }).length;
+            return items.filter((item) =>
+                mock._wheres.every((entry) => matchesWhere(item, entry))
+            ).length;
         },
         async getMany() {
-            let items = data().filter((item) => {
-                for (const entry of mock._wheres) {
-                    const col = entry.col ?? entry.paramKey;
-                    if ((item as any)[col] !== entry.value) return false;
-                }
-                return true;
-            });
+            let items = data().filter((item) =>
+                mock._wheres.every((entry) => matchesWhere(item, entry))
+            );
 
             if (mock._orderBy) {
                 const [col, dir] = mock._orderBy;

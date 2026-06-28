@@ -87,3 +87,31 @@ export const requireAdminApi = (
         message: 'Admin access required',
     });
 };
+
+const ADMIN_ROLES_SET = new Set(ADMIN_ROLES);
+
+const isAdmin = (req: IRequest): boolean => {
+    const role = req.auth?.claims?.role as string | undefined;
+    const userType = req.auth?.claims?.userType as string | undefined;
+    return (
+        !!(role && ADMIN_ROLES_SET.has(role)) ||
+        !!(userType && ADMIN_ROLES_SET.has(userType))
+    );
+};
+
+export const requireSelfOrAdmin = (
+    req: IRequest,
+    res: Response,
+    next: NextFunction
+) => {
+    if (req.params.userId === req.auth?.userId) {
+        return next();
+    }
+    if (isAdmin(req)) {
+        return next();
+    }
+    return sendError(res, 403, {
+        code: 'FORBIDDEN',
+        message: 'You can only access your own donations',
+    });
+};

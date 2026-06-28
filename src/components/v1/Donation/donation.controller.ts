@@ -26,13 +26,16 @@ const handleError = (
 };
 
 export const createDonation = async (
-    req: Request,
+    req: IRequest,
     res: Response
 ): Promise<void> => {
     try {
         const service = getService();
-        const data = req.body as CreateDonationInput;
-        const donation = await service.createDonation(data);
+        const body = req.body as CreateDonationInput;
+        const donation = await service.createDonation({
+            ...body,
+            donorId: req.auth?.userId ?? body.donorId,
+        });
         sendSuccess(res, donation, 201);
     } catch (error) {
         handleError(res, error, 'Failed to create donation');

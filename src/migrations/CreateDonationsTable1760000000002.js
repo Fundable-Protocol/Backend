@@ -1,14 +1,14 @@
-const { MigrationInterface } = require("typeorm")
+const { MigrationInterface } = require('typeorm');
 
 module.exports = class CreateDonationsTable1760000000002 {
-  name = "CreateDonationsTable1760000000002"
+    name = 'CreateDonationsTable1760000000002';
 
-  async up(queryRunner) {
-    await queryRunner.query(`
+    async up(queryRunner) {
+        await queryRunner.query(`
       CREATE TYPE "donation_status" AS ENUM('pending', 'confirmed', 'failed', 'refunded')
-    `)
+    `);
 
-    await queryRunner.query(`
+        await queryRunner.query(`
       CREATE TABLE "donations" (
         "id" text NOT NULL,
         "campaign_id" text NOT NULL,
@@ -34,22 +34,52 @@ module.exports = class CreateDonationsTable1760000000002 {
         "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT "PK_donations_id" PRIMARY KEY ("id")
       )
-    `)
+    `);
 
-    await queryRunner.query(`CREATE INDEX "donations_campaign_id_idx" ON "donations" ("campaign_id")`)
-    await queryRunner.query(`CREATE INDEX "donations_donor_address_idx" ON "donations" ("donor_address")`)
-    await queryRunner.query(`CREATE INDEX "donations_status_idx" ON "donations" ("status")`)
-    await queryRunner.query(`CREATE INDEX "donations_created_at_idx" ON "donations" ("created_at")`)
-    await queryRunner.query(`CREATE INDEX "donations_transaction_hash_idx" ON "donations" ("transaction_hash")`)
-  }
+        await queryRunner.query(
+            `CREATE INDEX "donations_campaign_id_idx" ON "donations" ("campaign_id")`
+        );
+        await queryRunner.query(
+            `CREATE INDEX "donations_donor_address_idx" ON "donations" ("donor_address")`
+        );
+        await queryRunner.query(
+            `CREATE INDEX "donations_donor_id_idx" ON "donations" ("donor_id")`
+        );
+        await queryRunner.query(
+            `CREATE INDEX "donations_donation_token_idx" ON "donations" ("token_address")`
+        );
+        await queryRunner.query(
+            `CREATE INDEX "donations_status_idx" ON "donations" ("status")`
+        );
+        await queryRunner.query(
+            `CREATE INDEX "donations_created_at_idx" ON "donations" ("created_at")`
+        );
+        await queryRunner.query(
+            `CREATE UNIQUE INDEX "donations_transaction_hash_idx" ON "donations" ("transaction_hash") WHERE "transaction_hash" IS NOT NULL`
+        );
+    }
 
-  async down(queryRunner) {
-    await queryRunner.query(`DROP INDEX IF EXISTS "donations_transaction_hash_idx"`)
-    await queryRunner.query(`DROP INDEX IF EXISTS "donations_created_at_idx"`)
-    await queryRunner.query(`DROP INDEX IF EXISTS "donations_status_idx"`)
-    await queryRunner.query(`DROP INDEX IF EXISTS "donations_donor_address_idx"`)
-    await queryRunner.query(`DROP INDEX IF EXISTS "donations_campaign_id_idx"`)
-    await queryRunner.query(`DROP TABLE IF EXISTS "donations"`)
-    await queryRunner.query(`DROP TYPE IF EXISTS "donation_status"`)
-  }
-}
+    async down(queryRunner) {
+        await queryRunner.query(
+            `DROP INDEX IF EXISTS "donations_transaction_hash_idx"`
+        );
+        await queryRunner.query(
+            `DROP INDEX IF EXISTS "donations_created_at_idx"`
+        );
+        await queryRunner.query(`DROP INDEX IF EXISTS "donations_status_idx"`);
+        await queryRunner.query(
+            `DROP INDEX IF EXISTS "donations_donation_token_idx"`
+        );
+        await queryRunner.query(
+            `DROP INDEX IF EXISTS "donations_donor_id_idx"`
+        );
+        await queryRunner.query(
+            `DROP INDEX IF EXISTS "donations_donor_address_idx"`
+        );
+        await queryRunner.query(
+            `DROP INDEX IF EXISTS "donations_campaign_id_idx"`
+        );
+        await queryRunner.query(`DROP TABLE IF EXISTS "donations"`);
+        await queryRunner.query(`DROP TYPE IF EXISTS "donation_status"`);
+    }
+};

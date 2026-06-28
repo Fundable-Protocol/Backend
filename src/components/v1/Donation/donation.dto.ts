@@ -9,7 +9,7 @@ export interface DonationResponseDto {
     donorAddress: string;
     donorName: string | null;
     transactionHash: string | null;
-    blockNumber: number | null;
+    blockNumber: string | null;
     blockTimestamp: Date | null;
     gasFee: string;
     amount: string;

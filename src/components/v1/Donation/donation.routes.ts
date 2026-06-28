@@ -30,7 +30,7 @@ router.post(
     createDonation
 );
 
-router.get('/stats', getDonationStats);
+router.get('/stats', requireJwtAuthApi, requireAdminApi, getDonationStats);
 router.get(
     '/campaigns/:campaignId',
     policyMiddleware(listCampaignDonationsQuerySchema, 'query'),

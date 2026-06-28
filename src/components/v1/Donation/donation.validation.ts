@@ -4,6 +4,31 @@ import { DonationStatus, Network } from '../../../types/enums';
 const ethereumAddressRegex = /^0x[a-fA-F0-9]{40}$/;
 const decimalStringRegex = /^\d+(\.\d+)?$/;
 const starknetTransactionHashRegex = /^0x([A-Fa-f0-9]{1,64})$/;
+const MAX_DECIMAL_PRECISION = 65;
+const MAX_DECIMAL_SCALE = 30;
+
+const decimal65x30 = (fieldName: string) =>
+    z
+        .string()
+        .regex(
+            decimalStringRegex,
+            `${fieldName} must be a valid decimal string`
+        )
+        .refine(
+            (val) => {
+                const parts = val.split('.');
+                const intDigits = parts[0].replace(/^0+/, '') || '0';
+                const fracDigits = parts[1] ?? '';
+                return (
+                    intDigits.length + fracDigits.length <=
+                        MAX_DECIMAL_PRECISION &&
+                    fracDigits.length <= MAX_DECIMAL_SCALE
+                );
+            },
+            {
+                message: `${fieldName} exceeds decimal(${MAX_DECIMAL_PRECISION},${MAX_DECIMAL_SCALE}) limits`,
+            }
+        );
 
 export const createDonationSchema = z.object({
     campaignId: z.string().min(1, 'campaignId is required'),
@@ -48,19 +73,11 @@ export const createDonationSchema = z.object({
         .min(0, 'tokenDecimals must be at least 0')
         .max(30, 'tokenDecimals must be at most 30'),
 
-    amount: z
-        .string()
-        .regex(decimalStringRegex, 'amount must be a valid decimal string'),
+    amount: decimal65x30('amount'),
 
-    usdAmount: z
-        .string()
-        .regex(decimalStringRegex, 'usdAmount must be a valid decimal string')
-        .optional(),
+    usdAmount: decimal65x30('usdAmount').optional(),
 
-    gasFee: z
-        .string()
-        .regex(decimalStringRegex, 'gasFee must be a valid decimal string')
-        .optional(),
+    gasFee: decimal65x30('gasFee').optional(),
 
     transactionHash: z
         .string()
@@ -72,8 +89,8 @@ export const createDonationSchema = z.object({
         .optional(),
 
     blockNumber: z
-        .number()
-        .int('blockNumber must be an integer')
+        .string()
+        .regex(/^\d+$/, 'blockNumber must be a non-negative integer string')
         .nullable()
         .optional(),
 

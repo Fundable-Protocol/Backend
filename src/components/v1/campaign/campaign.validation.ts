@@ -35,7 +35,8 @@ export const createCampaignSchema = z.object({
         .string()
         .trim()
         .max(255, 'title must be at most 255 characters')
-        .optional(),
+        .optional()
+        .transform((val) => (val && val.length > 0 ? val : undefined)),
 
     donation_token: z
         .string()

@@ -13,9 +13,11 @@ import { DonationStatus, Network } from '../../../types/enums';
 @Entity('donations')
 @Index('donations_campaign_id_idx', ['campaignId'])
 @Index('donations_donor_address_idx', ['donorAddress'])
+@Index('donations_donor_id_idx', ['donorId'])
+@Index('donations_donation_token_idx', ['tokenAddress'])
 @Index('donations_status_idx', ['status'])
 @Index('donations_created_at_idx', ['createdAt'])
-@Index('donations_transaction_hash_idx', ['transactionHash'])
+@Index('donations_transaction_hash_idx', ['transactionHash'], { unique: true })
 export class DonationEntity {
     @PrimaryColumn('text')
     id: string;
@@ -42,7 +44,7 @@ export class DonationEntity {
     transactionHash: string | null;
 
     @Column('bigint', { name: 'block_number', nullable: true })
-    blockNumber: number | null;
+    blockNumber: string | null;
 
     @Column('timestamp', {
         name: 'block_timestamp',

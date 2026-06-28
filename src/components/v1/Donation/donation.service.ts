@@ -73,7 +73,7 @@ export class DonationService {
         qb.skip((query.page - 1) * query.limit).take(query.limit);
 
         const entities = await qb.getMany();
-        const data = entities.map((e) => this.formatResponse(e));
+        const data = entities.map((e) => this.formatResponse(e, true));
 
         return {
             data,
@@ -266,15 +266,19 @@ export class DonationService {
         return qb;
     }
 
-    private formatResponse(entity: DonationEntity): DonationResponseDto {
+    private formatResponse(
+        entity: DonationEntity,
+        isAdmin = false
+    ): DonationResponseDto {
+        const showIdentity = !entity.isAnonymous || isAdmin;
         return {
             id: entity.id,
             campaignId: entity.campaignId,
             campaignRef: entity.campaignRef,
             campaignTitle: entity.campaignTitle,
-            donorId: entity.donorId,
-            donorAddress: entity.donorAddress,
-            donorName: entity.donorName,
+            donorId: showIdentity ? entity.donorId : null,
+            donorAddress: showIdentity ? entity.donorAddress : '',
+            donorName: showIdentity ? entity.donorName : null,
             transactionHash: entity.transactionHash,
             blockNumber: entity.blockNumber,
             blockTimestamp: entity.blockTimestamp,
@@ -287,7 +291,7 @@ export class DonationService {
             status: entity.status,
             confirmedAt: entity.confirmedAt,
             isAnonymous: entity.isAnonymous,
-            message: entity.message,
+            message: showIdentity ? entity.message : null,
             network: entity.network,
             createdAt: entity.createdAt,
             updatedAt: entity.updatedAt,

@@ -1,12 +1,13 @@
 import type { Repository } from 'typeorm';
+import { QueryFailedError } from 'typeorm';
 
 import CampaignEntity from './campaign.entity';
 import type AuditLogEntity from '../audit/auditLog.entity';
 
 import WalletEntity from '../wallet/wallet.entity';
 import UserEntity from '../user/user.entity';
-import logger from '../../../utils/logger';
 import type { CairoCampaignClient } from '../../../services/cairo/campaignFactory.client';
+import { uuid } from '../../../utils';
 
 export class CampaignService {
     constructor(
@@ -34,15 +35,6 @@ export class CampaignService {
             title,
         } = args;
 
-        const existing = await this.campaignRepository.findOne({
-            where: { campaignRef },
-        });
-        if (existing) {
-            const error = new Error('Duplicate campaign_ref');
-            (error as any).code = 'DUPLICATE_CAMPAIGN_REF';
-            throw error;
-        }
-
         if (!walletAddress) {
             const error = new Error('Missing wallet address in token claims');
             (error as any).code = 'MISSING_WALLET_ADDRESS';
@@ -66,31 +58,53 @@ export class CampaignService {
             throw error;
         }
 
-        const { transactionHash, campaignId } =
+        // Reserve campaign_ref in DB first (unique constraint guards against duplicates)
+        const localCampaignId = uuid();
+        let campaign: CampaignEntity;
+        try {
+            campaign = await this.campaignRepository.save(
+                this.campaignRepository.create({
+                    campaignId: localCampaignId,
+                    userId,
+                    campaignRef,
+                    targetAmount,
+                    donationToken,
+                    title: title ?? null,
+                })
+            );
+        } catch (error: unknown) {
+            if (
+                (error instanceof QueryFailedError ||
+                    (error as any)?.name === 'QueryFailedError') &&
+                (error as any).code === '23505'
+            ) {
+                const dupError = new Error('Duplicate campaign_ref');
+                (dupError as any).code = 'DUPLICATE_CAMPAIGN_REF';
+                throw dupError;
+            }
+            throw error;
+        }
+
+        const { transactionHash, campaignId: chainCampaignId } =
             await this.cairoClient.createCampaign({
                 campaignRef,
                 targetAmount,
                 donationToken,
             });
 
-        const saved = await this.campaignRepository.save(
-            this.campaignRepository.create({
-                campaignId,
-                userId,
-                campaignRef,
-                targetAmount,
-                donationToken,
-                transactionHash,
-                title: title ?? null,
-            })
-        );
+        await this.campaignRepository
+            .createQueryBuilder()
+            .update(CampaignEntity)
+            .set({ campaignId: chainCampaignId, transactionHash })
+            .where('campaign_id = :id', { id: localCampaignId })
+            .execute();
 
         await this.auditRepository.save(
             this.auditRepository.create({
                 userId,
                 action: 'campaign.create',
                 entity: 'campaign',
-                entityId: saved.campaignId,
+                entityId: chainCampaignId,
                 details: {
                     campaignRef,
                     donationToken,
@@ -99,21 +113,13 @@ export class CampaignService {
             } as any)
         );
 
-        const user = await this.userRepository.findOne({
-            where: { id: userId },
-        });
-        if (user) {
-            const nextCount = (user.campaignCount ?? 0) + 1;
-            await this.userRepository.update(
-                { id: userId },
-                { campaignCount: nextCount }
-            );
-        } else {
-            logger.info(
-                `User ${userId} not found; skipped campaignCount update`
-            );
-        }
+        await this.userRepository
+            .createQueryBuilder()
+            .update()
+            .set({ campaignCount: () => 'COALESCE(campaign_count, 0) + 1' })
+            .where('id = :id', { id: userId })
+            .execute();
 
-        return saved;
+        return { ...campaign, campaignId: chainCampaignId, transactionHash };
     }
 }
