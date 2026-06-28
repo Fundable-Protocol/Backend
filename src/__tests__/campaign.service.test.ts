@@ -65,6 +65,7 @@ const makeRepo = <T extends Record<string, any>>(
         },
         createQueryBuilder() {
             let qbWhereClause: string | null = null;
+            let qbWhereParams: Record<string, any> = {};
             const qb: MockQB = {
                 update() {
                     return qb;
@@ -72,18 +73,28 @@ const makeRepo = <T extends Record<string, any>>(
                 set(_values: Record<string, any>) {
                     return qb;
                 },
-                where(clause: string, _params: Record<string, any>) {
+                where(clause: string, params: Record<string, any>) {
                     qbWhereClause = clause;
+                    qbWhereParams = params;
                     return qb;
                 },
                 async execute() {
                     if (qbWhereClause && qbWhereClause.includes('id =')) {
-                        for (const item of repo.data) {
+                        const targetId = Object.values(qbWhereParams).find(
+                            (v) => typeof v === 'string'
+                        );
+                        if (targetId) {
+                            const idx = repo.data.findIndex(
+                                (d: any) => d.id === targetId
+                            );
                             if (
-                                typeof (item as any).campaignCount === 'number'
+                                idx >= 0 &&
+                                typeof (repo.data[idx] as any).campaignCount ===
+                                    'number'
                             ) {
-                                (item as any).campaignCount =
-                                    ((item as any).campaignCount ?? 0) + 1;
+                                (repo.data[idx] as any).campaignCount =
+                                    ((repo.data[idx] as any).campaignCount ??
+                                        0) + 1;
                             }
                         }
                     }
@@ -114,7 +125,10 @@ test('CampaignService rejects duplicate campaign_ref', async () => {
     const users = makeRepo<UserEntity>(() => false);
 
     await wallets.save({ address: '0x1', balance: '0.1' } as any);
-    await campaigns.save({ campaignRef: 'ABCDE' } as any);
+    await campaigns.save({
+        campaignRef: 'ABCDE',
+        transactionHash: '0xexisting',
+    } as any);
 
     const service = new CampaignService(
         campaigns as any,

@@ -7,34 +7,77 @@ import { DonationStatus } from '../types/enums';
 
 type PredicateOp = '=' | '!=' | '>=' | '<=' | 'ILIKE';
 
+const SEARCHABLE_FIELDS = [
+    'donorAddress',
+    'donorName',
+    'campaignRef',
+    'campaignTitle',
+];
+
 const parseClause = (
     clause: string
-): { col: string; op: PredicateOp } | null => {
+): { col: string | null; op: PredicateOp; multiColumn: boolean } | null => {
+    // CAST(entity.field AS type) OP :param
+    const castMatch = clause.match(/CAST\(\w+\.(\w+)\s+AS\s+\w+\)\s*(>=|<=)/);
+    if (castMatch)
+        return {
+            col: castMatch[1],
+            op: castMatch[2] as PredicateOp,
+            multiColumn: false,
+        };
+    // OR-group ILIKE: (donation.x ILIKE :p OR donation.y ILIKE :p)
+    if (clause.includes(' OR ') && clause.includes('ILIKE')) {
+        return { col: null, op: 'ILIKE', multiColumn: true };
+    }
+    // Simple entity.field OP :param
     const match = clause.match(/\.(\w+)\s*(!?=|>=|<=|ILIKE)/);
     if (!match) return null;
-    return { col: match[1], op: match[2] as PredicateOp };
+    return {
+        col: match[1],
+        op: match[2] as PredicateOp,
+        multiColumn: false,
+    };
 };
 
 type MockWhereEntry = {
     col: string | null;
     op: PredicateOp;
+    multiColumn: boolean;
     paramKey: string;
     value: any;
 };
 
 const matchesWhere = (item: any, entry: MockWhereEntry): boolean => {
-    const col = entry.col ?? entry.paramKey;
-    const val = item[col];
     switch (entry.op) {
-        case '=':
-            return val === entry.value;
-        case '!=':
-            return val !== entry.value;
-        case '>=':
-            return Number(val) >= Number(entry.value);
-        case '<=':
-            return Number(val) <= Number(entry.value);
+        case '=': {
+            const col = entry.col ?? entry.paramKey;
+            return item[col] === entry.value;
+        }
+        case '!=': {
+            const col = entry.col ?? entry.paramKey;
+            return item[col] !== entry.value;
+        }
+        case '>=': {
+            const col = entry.col ?? entry.paramKey;
+            return Number(item[col]) >= Number(entry.value);
+        }
+        case '<=': {
+            const col = entry.col ?? entry.paramKey;
+            return Number(item[col]) <= Number(entry.value);
+        }
         case 'ILIKE': {
+            if (entry.multiColumn) {
+                const pattern = (entry.value as string).replace(/%/g, '');
+                return SEARCHABLE_FIELDS.some((field) => {
+                    const val = item[field];
+                    return (
+                        typeof val === 'string' &&
+                        val.toLowerCase().includes(pattern.toLowerCase())
+                    );
+                });
+            }
+            const col = entry.col ?? entry.paramKey;
+            const val = item[col];
             if (typeof val !== 'string') return false;
             const pattern = (entry.value as string).replace(/%/g, '');
             return val.toLowerCase().includes(pattern.toLowerCase());
@@ -74,6 +117,7 @@ const makeMockQB = (data: () => any[]): MockQueryBuilder => {
             mock._wheres = Object.entries(params).map(([key, value]) => ({
                 col: parsed?.col ?? null,
                 op: parsed?.op ?? '=',
+                multiColumn: parsed?.multiColumn ?? false,
                 paramKey: key,
                 value,
             }));
@@ -85,6 +129,7 @@ const makeMockQB = (data: () => any[]): MockQueryBuilder => {
                 mock._wheres.push({
                     col: parsed?.col ?? null,
                     op: parsed?.op ?? '=',
+                    multiColumn: parsed?.multiColumn ?? false,
                     paramKey: key,
                     value,
                 });

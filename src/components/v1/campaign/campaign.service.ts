@@ -58,6 +58,55 @@ export class CampaignService {
             throw error;
         }
 
+        // Check for existing reservation (allows resuming on failed blockchain calls)
+        const existingReservation = await this.campaignRepository.findOne({
+            where: { campaignRef },
+        });
+        if (existingReservation) {
+            if (existingReservation.transactionHash) {
+                const dupError = new Error('Duplicate campaign_ref');
+                (dupError as any).code = 'DUPLICATE_CAMPAIGN_REF';
+                throw dupError;
+            }
+            // Resume failed reservation: retry blockchain call and update row
+            const { transactionHash, campaignId: chainCampaignId } =
+                await this.cairoClient.createCampaign({
+                    campaignRef,
+                    targetAmount,
+                    donationToken,
+                });
+            await this.campaignRepository.update(
+                { campaignRef },
+                { campaignId: chainCampaignId, transactionHash }
+            );
+            await this.auditRepository.save(
+                this.auditRepository.create({
+                    userId,
+                    action: 'campaign.create',
+                    entity: 'campaign',
+                    entityId: chainCampaignId,
+                    details: {
+                        campaignRef,
+                        donationToken,
+                        transactionHash,
+                    },
+                } as any)
+            );
+            await this.userRepository
+                .createQueryBuilder()
+                .update()
+                .set({
+                    campaignCount: () => 'COALESCE(campaign_count, 0) + 1',
+                })
+                .where('id = :id', { id: userId })
+                .execute();
+            return {
+                ...existingReservation,
+                campaignId: chainCampaignId,
+                transactionHash,
+            };
+        }
+
         // Reserve campaign_ref in DB first (unique constraint guards against duplicates)
         const localCampaignId = uuid();
         let campaign: CampaignEntity;
