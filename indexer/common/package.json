@@ -9,19 +9,18 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "codegen": "bun --print \"'common: no codegen configured yet'\"",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
     "dev": "bun --watch src/index.ts",
     "lint": "biome check .",
     "test": "vitest run src",
     "type-check": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "drizzle-orm": "0.45.2",
-    "postgres": "3.4.9",
-    "zod": "3.25.67"
+    "@stellar/stellar-sdk": "^12.0.0",
+    "pg": "^8.11.3",
+    "typeorm": "^0.3.20",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
-    "drizzle-kit": "0.31.10"
+    "@types/pg": "^8.11.0"
   }
 }
