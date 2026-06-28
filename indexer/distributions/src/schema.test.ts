@@ -17,33 +17,42 @@ describe("distributions GraphQL schema", () => {
     expect(schemaContent).toContain("CANCELLED");
   });
 
+  const definitionBody = (kind: "type" | "input" | "enum", name: string) => {
+    const match = schemaContent.match(new RegExp(`${kind}\\s+${name}\\s*\\{([\\s\\S]*?)\\n\\}`));
+    expect(match).not.toBeNull();
+    return match?.[1] ?? "";
+  };
+
   test("defines DistributionBatch type aligned with database schema", () => {
-    expect(schemaContent).toContain("type DistributionBatch {");
-    expect(schemaContent).toContain("id: ID!");
-    expect(schemaContent).toContain("contractId: String!");
-    expect(schemaContent).toContain("distributor: String!");
-    expect(schemaContent).toContain("token: String!");
-    expect(schemaContent).toContain("totalAmount: String!");
-    expect(schemaContent).toContain("claimedAmount: String!");
-    expect(schemaContent).toContain("recipientCount: Int!");
-    expect(schemaContent).toContain("status: DistributionStatus!");
-    expect(schemaContent).toContain("pausedAt: String");
-    expect(schemaContent).toContain("resumedAt: String");
-    expect(schemaContent).toContain("uniqueRef: String!");
-    expect(schemaContent).toContain("ledgerNumber: Int!");
-    expect(schemaContent).toContain("txHash: String!");
-    expect(schemaContent).toContain("claims: [ClaimAction!]!");
+    const body = definitionBody("type", "DistributionBatch");
+    expect(body).toContain("id: ID!");
+    expect(body).toContain("contractId: String!");
+    expect(body).toContain("distributor: String!");
+    expect(body).toContain("token: String!");
+    expect(body).toContain("totalAmount: String!");
+    expect(body).toContain("claimedAmount: String!");
+    expect(body).toContain("recipientCount: Int!");
+    expect(body).toContain("status: DistributionStatus!");
+    expect(body).toContain("pausedAt: String");
+    expect(body).toContain("resumedAt: String");
+    expect(body).toContain("uniqueRef: String!");
+    expect(body).toContain("ledgerNumber: Int!");
+    expect(body).toContain("txHash: String!");
+    expect(body).toContain("claims(pagination: PaginationInput): ClaimConnection!");
+    expect(body).toContain("createdAt: String!");
+    expect(body).toContain("updatedAt: String!");
   });
 
   test("defines ClaimAction type aligned with database schema", () => {
-    expect(schemaContent).toContain("type ClaimAction {");
-    expect(schemaContent).toContain("id: ID!");
-    expect(schemaContent).toContain("batchId: ID!");
-    expect(schemaContent).toContain("claimant: String!");
-    expect(schemaContent).toContain("amount: String!");
-    expect(schemaContent).toContain("txHash: String!");
-    expect(schemaContent).toContain("ledgerNumber: Int!");
-    expect(schemaContent).toContain("eventTimestamp: String!");
+    const body = definitionBody("type", "ClaimAction");
+    expect(body).toContain("id: ID!");
+    expect(body).toContain("batchId: ID!");
+    expect(body).toContain("claimant: String!");
+    expect(body).toContain("amount: String!");
+    expect(body).toContain("txHash: String!");
+    expect(body).toContain("ledgerNumber: Int!");
+    expect(body).toContain("eventTimestamp: String!");
+    expect(body).toContain("createdAt: String!");
   });
 
   test("defines filter and pagination inputs", () => {

@@ -19,7 +19,7 @@ type DistributionBatch {
   uniqueRef: String!
   ledgerNumber: Int!
   txHash: String!
-  claims: [ClaimAction!]!
+  claims(pagination: PaginationInput): ClaimConnection!
   createdAt: String!
   updatedAt: String!
 }
