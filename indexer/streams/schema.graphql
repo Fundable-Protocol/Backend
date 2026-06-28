@@ -1,11 +1,78 @@
+enum StreamStatus {
+  ACTIVE
+  CANCELLED
+  COMPLETED
+}
+
 type Stream {
   id: ID!
+  contractId: String!
+  sender: String!
+  recipient: String!
+  token: String!
+  depositedAmount: String!
+  withdrawnAmount: String!
+  startTime: String!
+  stopTime: String!
+  status: StreamStatus!
+  ledger: Int!
+  ledgerClosedAt: String!
+  createdAt: String!
+  updatedAt: String!
+  withdrawals: [WithdrawalAction!]!
+  cancelAction: CancelAction
 }
 
 type WithdrawalAction {
   id: ID!
+  streamId: ID!
+  recipient: String!
+  amount: String!
+  ledger: Int!
+  ledgerClosedAt: String!
+  transactionHash: String!
+  createdAt: String!
 }
 
 type CancelAction {
   id: ID!
+  streamId: ID!
+  cancelledBy: String!
+  senderBalance: String!
+  recipientBalance: String!
+  ledger: Int!
+  ledgerClosedAt: String!
+  transactionHash: String!
+  createdAt: String!
+}
+
+input StreamFilterInput {
+  sender: String
+  recipient: String
+  token: String
+  status: StreamStatus
+  contractId: String
+}
+
+input PaginationInput {
+  first: Int
+  after: String
+}
+
+type StreamConnection {
+  nodes: [Stream!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  endCursor: String
+}
+
+type Query {
+  stream(id: ID!): Stream
+  streams(filter: StreamFilterInput, pagination: PaginationInput): StreamConnection!
+  streamsByRecipient(recipient: String!, pagination: PaginationInput): StreamConnection!
+  streamsBySender(sender: String!, pagination: PaginationInput): StreamConnection!
 }
