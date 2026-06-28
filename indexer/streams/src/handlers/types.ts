@@ -1,56 +1,64 @@
 export interface StreamFundedPayload {
-  streamId: string;
-  sender: string;
-  amount: string;
-  token: string;
-  transactionHash: string;
+  streamId: string | undefined;
+  sender: string | undefined;
+  amount: string | undefined;
+  token: string | undefined;
+  transactionHash: string | undefined;
 }
 
 export interface StreamWithdrawalPayload {
-  streamId: string;
-  recipient: string;
-  amount: string;
-  transactionHash: string;
+  streamId: string | undefined;
+  recipient: string | undefined;
+  amount: string | undefined;
+  transactionHash: string | undefined;
 }
 
 export interface StreamCancelPayload {
-  streamId: string;
-  cancelledBy: string;
-  senderBalance: string;
-  recipientBalance: string;
-  transactionHash: string;
+  streamId: string | undefined;
+  cancelledBy: string | undefined;
+  senderBalance: string | undefined;
+  recipientBalance: string | undefined;
+  transactionHash: string | undefined;
+}
+
+function record(v: unknown): Record<string, unknown> {
+  return v !== null && typeof v === "object" ? (v as Record<string, unknown>) : {};
+}
+
+function str(v: unknown): string | undefined {
+  if (v === undefined || v === null || v === "") return undefined;
+  const s = String(v);
+  return s === "" ? undefined : s;
 }
 
 export function parseStreamFunded(data: unknown): StreamFundedPayload {
-  const d = data as Record<string, unknown>;
+  const d = record(data);
   return {
-    streamId: String(d.streamId ?? d.stream_id ?? ""),
-    sender: String(d.sender ?? ""),
-    amount: String(d.amount ?? "0"),
-    token: String(d.token ?? ""),
-    transactionHash: String(d.transactionHash ?? d.tx_hash ?? ""),
+    streamId: str(d.streamId ?? d.stream_id),
+    sender: str(d.sender),
+    amount: str(d.amount),
+    token: str(d.token),
+    transactionHash: str(d.transactionHash ?? d.tx_hash),
   };
 }
 
 export function parseStreamWithdrawal(data: unknown): StreamWithdrawalPayload {
-  const d = data as Record<string, unknown>;
+  const d = record(data);
   return {
-    streamId: String(d.streamId ?? d.stream_id ?? ""),
-    recipient: String(d.recipient ?? ""),
-    amount: String(d.amount ?? "0"),
-    transactionHash: String(d.transactionHash ?? d.tx_hash ?? ""),
+    streamId: str(d.streamId ?? d.stream_id),
+    recipient: str(d.recipient),
+    amount: str(d.amount),
+    transactionHash: str(d.transactionHash ?? d.tx_hash),
   };
 }
 
 export function parseStreamCancel(data: unknown): StreamCancelPayload {
-  const d = data as Record<string, unknown>;
+  const d = record(data);
   return {
-    streamId: String(d.streamId ?? d.stream_id ?? ""),
-    cancelledBy: String(d.cancelledBy ?? d.cancelled_by ?? ""),
-    senderBalance: String(d.senderBalance ?? d.sender_balance ?? "0"),
-    recipientBalance: String(
-      d.recipientBalance ?? d.recipient_balance ?? "0",
-    ),
-    transactionHash: String(d.transactionHash ?? d.tx_hash ?? ""),
+    streamId: str(d.streamId ?? d.stream_id),
+    cancelledBy: str(d.cancelledBy ?? d.cancelled_by),
+    senderBalance: str(d.senderBalance ?? d.sender_balance),
+    recipientBalance: str(d.recipientBalance ?? d.recipient_balance),
+    transactionHash: str(d.transactionHash ?? d.tx_hash),
   };
 }

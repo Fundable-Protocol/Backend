@@ -37,6 +37,14 @@ export class HandlerRegistry {
 
   async dispatch(event: SorobanEventInput): Promise<HandlerResult[]> {
     const handlers = this.matches(event);
-    return Promise.all(handlers.map((h) => h(event)));
+    return Promise.all(
+      handlers.map((h) =>
+        h(event).catch((err) => ({
+          ok: false as const,
+          error: err instanceof Error ? err.message : String(err),
+          retriable: true,
+        }))
+      )
+    );
   }
 }

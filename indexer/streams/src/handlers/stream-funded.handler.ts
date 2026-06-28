@@ -15,6 +15,22 @@ export const streamFundedHandler: EventHandler = async (
       return { ok: false, error: "Missing streamId in funded event", retriable: false };
     }
 
+    if (!payload.sender) {
+      return { ok: false, error: "Missing sender in funded event", retriable: false };
+    }
+
+    if (!payload.token) {
+      return { ok: false, error: "Missing token in funded event", retriable: false };
+    }
+
+    if (!payload.amount) {
+      return { ok: false, error: "Missing amount in funded event", retriable: false };
+    }
+
+    if (!payload.transactionHash) {
+      return { ok: false, error: "Missing transactionHash in funded event", retriable: false };
+    }
+
     // TODO(#32): persist deposit via stream repository once DB schema is merged
     console.info(
       `[stream-funded] streamId=${payload.streamId} amount=${payload.amount} token=${payload.token} ledger=${event.ledger}`,

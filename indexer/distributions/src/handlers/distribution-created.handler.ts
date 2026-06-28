@@ -19,6 +19,46 @@ export const distributionCreatedHandler: EventHandler = async (
       };
     }
 
+    if (!payload.creator) {
+      return {
+        ok: false,
+        error: "Missing creator in distribution_created event",
+        retriable: false,
+      };
+    }
+
+    if (!payload.token) {
+      return {
+        ok: false,
+        error: "Missing token in distribution_created event",
+        retriable: false,
+      };
+    }
+
+    if (!payload.totalAmount) {
+      return {
+        ok: false,
+        error: "Missing totalAmount in distribution_created event",
+        retriable: false,
+      };
+    }
+
+    if (!payload.transactionHash) {
+      return {
+        ok: false,
+        error: "Missing transactionHash in distribution_created event",
+        retriable: false,
+      };
+    }
+
+    if (payload.recipientCount <= 0) {
+      return {
+        ok: false,
+        error: "Invalid recipientCount in distribution_created event",
+        retriable: false,
+      };
+    }
+
     // TODO(#36): persist distribution batch via repository once DB schema is merged
     // TODO(#27): record indexed event identity via event repository
     console.info(

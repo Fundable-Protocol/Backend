@@ -26,6 +26,10 @@ export interface DistributionResumedPayload {
   transactionHash: string;
 }
 
+function record(v: unknown): Record<string, unknown> {
+  return v !== null && typeof v === "object" ? (v as Record<string, unknown>) : {};
+}
+
 function str(v: unknown): string {
   return v !== undefined && v !== null ? String(v) : "";
 }
@@ -38,7 +42,7 @@ function num(v: unknown): number {
 export function parseDistributionCreated(
   data: unknown,
 ): DistributionCreatedPayload {
-  const d = data as Record<string, unknown>;
+  const d = record(data);
   return {
     distributionId: str(d.distributionId ?? d.distribution_id),
     creator: str(d.creator),
@@ -50,7 +54,7 @@ export function parseDistributionCreated(
 }
 
 export function parseTokensClaimed(data: unknown): TokensClaimedPayload {
-  const d = data as Record<string, unknown>;
+  const d = record(data);
   return {
     distributionId: str(d.distributionId ?? d.distribution_id),
     claimant: str(d.claimant),
@@ -62,7 +66,7 @@ export function parseTokensClaimed(data: unknown): TokensClaimedPayload {
 export function parseDistributionPaused(
   data: unknown,
 ): DistributionPausedPayload {
-  const d = data as Record<string, unknown>;
+  const d = record(data);
   return {
     distributionId: str(d.distributionId ?? d.distribution_id),
     pausedBy: str(d.pausedBy ?? d.paused_by),
@@ -73,7 +77,7 @@ export function parseDistributionPaused(
 export function parseDistributionResumed(
   data: unknown,
 ): DistributionResumedPayload {
-  const d = data as Record<string, unknown>;
+  const d = record(data);
   return {
     distributionId: str(d.distributionId ?? d.distribution_id),
     resumedBy: str(d.resumedBy ?? d.resumed_by),

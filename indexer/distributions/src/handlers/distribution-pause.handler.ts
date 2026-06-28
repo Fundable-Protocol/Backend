@@ -19,6 +19,22 @@ export const distributionPausedHandler: EventHandler = async (
       };
     }
 
+    if (!payload.pausedBy) {
+      return {
+        ok: false,
+        error: "Missing pausedBy in distribution_paused event",
+        retriable: false,
+      };
+    }
+
+    if (!payload.transactionHash) {
+      return {
+        ok: false,
+        error: "Missing transactionHash in distribution_paused event",
+        retriable: false,
+      };
+    }
+
     // TODO(#36): update distribution status to PAUSED via repository
     console.info(
       `[distribution-paused] id=${payload.distributionId} by=${payload.pausedBy} ledger=${event.ledger}`,
@@ -44,6 +60,22 @@ export const distributionResumedHandler: EventHandler = async (
       return {
         ok: false,
         error: "Missing distributionId in distribution_resumed event",
+        retriable: false,
+      };
+    }
+
+    if (!payload.resumedBy) {
+      return {
+        ok: false,
+        error: "Missing resumedBy in distribution_resumed event",
+        retriable: false,
+      };
+    }
+
+    if (!payload.transactionHash) {
+      return {
+        ok: false,
+        error: "Missing transactionHash in distribution_resumed event",
         retriable: false,
       };
     }

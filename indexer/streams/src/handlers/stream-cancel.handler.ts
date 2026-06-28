@@ -15,6 +15,14 @@ export const streamCancelHandler: EventHandler = async (
       return { ok: false, error: "Missing streamId in cancel event", retriable: false };
     }
 
+    if (!payload.cancelledBy) {
+      return { ok: false, error: "Missing cancelledBy in cancel event", retriable: false };
+    }
+
+    if (!payload.transactionHash) {
+      return { ok: false, error: "Missing transactionHash in cancel event", retriable: false };
+    }
+
     // TODO(#32): update stream status to CANCELLED via repository once DB schema is merged
     console.info(
       `[stream-cancel] streamId=${payload.streamId} cancelledBy=${payload.cancelledBy} senderBalance=${payload.senderBalance} ledger=${event.ledger}`,
