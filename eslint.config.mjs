@@ -35,6 +35,11 @@ export default [
 
             '@typescript-eslint/no-unused-vars': 'off',
             '@typescript-eslint/no-explicit-any': 'warn',
+
+            // Enforce use of the project logger (src/utils/logger.ts) instead
+            // of direct console calls, which bypass structured logging and
+            // environment-aware log levels.
+            'no-console': 'error',
         },
     },
 ];
