@@ -75,7 +75,7 @@ export const resetDatabase = async () => {
         await queryRunner.clearDatabase();
         logger.info('All tables dropped. Database reset successfully!');
     } catch (error) {
-        console.error('Error resetting the database:', error);
+        logger.error('Error resetting the database:', { error: String(error) });
     } finally {
         await AppDataSource.destroy();
     }

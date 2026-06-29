@@ -3,6 +3,7 @@ import AppDataSource from "../../../config/persistence/data-source"
 import { DistributionEntity } from "./distribution.entity"
 import { DistributionService } from "./distribution.service"
 import type { ApiResponse, DistributionResponseDto, CreateDistributionDto, UpdateDistributionDto } from "./distribution.dto"
+import { logError } from "../../../utils/logger"
 
 const getDistributionService = () => {
   if (!AppDataSource.isInitialized) {
@@ -29,7 +30,7 @@ export const createDistribution = async (req: Request, res: Response): Promise<v
 
     res.status(201).json(response)
   } catch (error) {
-    console.error("Error in createDistribution:", error)
+    logError("Error in createDistribution", error)
 
     const errorResponse: ApiResponse<null> = {
       data: null,
@@ -57,7 +58,7 @@ export const updateDistribution = async (req: Request, res: Response): Promise<v
 
     res.status(200).json(response)
   } catch (error) {
-    console.error("Error in updateDistribution:", error)
+    logError("Error in updateDistribution", error)
 
     const isNotFound = error instanceof Error && error.message === "Distribution not found"
     const status = isNotFound ? 404 : 500
@@ -83,7 +84,7 @@ export const listDistributions = async (_req: Request, res: Response): Promise<v
 
     res.status(200).json(response)
   } catch (error) {
-    console.error("Error in listDistributions:", error)
+    logError("Error in listDistributions", error)
 
     const errorResponse: ApiResponse<null> = {
       data: null,

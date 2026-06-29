@@ -3,6 +3,7 @@ import type { Repository } from "typeorm"
 import type { DistributionEntity } from "./distribution.entity"
 import type { CreateDistributionDto, DistributionResponseDto, UpdateDistributionDto } from "./distribution.dto"
 import { DistributionStatus, Network } from "../../../types/enums"
+import { logError, logWarn } from "../../../utils/logger"
 
 export class DistributionService {
   constructor(private readonly distributionRepository: Repository<DistributionEntity>) {}
@@ -16,7 +17,7 @@ export class DistributionService {
 
       return this.formatDistributionResponse(savedDistribution)
     } catch (error) {
-      console.error("Error creating distribution:", error)
+      logError("Error creating distribution", error)
       throw new Error("Failed to create distribution")
     }
   }
@@ -57,7 +58,7 @@ export class DistributionService {
 
       return this.formatDistributionResponse(savedDistribution)
     } catch (error) {
-      console.error("Error updating distribution:", error)
+      logError("Error updating distribution", error)
       throw error instanceof Error ? error : new Error("Failed to update distribution")
     }
   }
@@ -71,7 +72,7 @@ export class DistributionService {
 
       return distributions.map((d) => this.formatDistributionResponse(d))
     } catch (error) {
-      console.error("Error listing distributions:", error)
+      logError("Error listing distributions", error)
       throw new Error("Failed to list distributions")
     }
   }
@@ -115,7 +116,7 @@ export class DistributionService {
       const rate = new Decimal(usdRate)
       return amount.mul(rate).toString()
     } catch (error) {
-      console.warn("Error calculating total USD amount:", error)
+      logWarn("Error calculating total USD amount", { error: String(error) })
       return "0"
     }
   }

@@ -4,6 +4,7 @@ import { z } from 'zod';
 import type { EntityManager } from 'typeorm';
 
 import { IRequest } from '../types/global';
+import { logError } from './logger';
 
 export const isValidUuid = (uuid: string): boolean => {
     const result = z.string().uuid().safeParse(uuid);
@@ -27,7 +28,7 @@ export async function executeTransaction<T>(
         try {
             return await transactionCallback(transactionManager);
         } catch (error) {
-            console.error('Transaction failed:', error);
+            logError('Transaction failed', error);
             throw error;
         }
     });
