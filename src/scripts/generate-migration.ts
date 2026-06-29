@@ -12,7 +12,7 @@ if (!migrationName) {
     process.exit(1);
 }
 
-const command = `bun run typeorm migration:generate --outputJs src/migrations/${migrationName}`;
+const command = `pnpm typeorm migration:generate --outputJs src/migrations/${migrationName}`;
 
 (async () => {
     try {
