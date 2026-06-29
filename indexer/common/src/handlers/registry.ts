@@ -1,9 +1,5 @@
-import type {
-  EventHandler,
-  HandlerFilter,
-  HandlerResult,
-  SorobanEventInput,
-} from "./types.js";
+import { type EventRepository, getSorobanEventIdentity } from "../db/repository.js";
+import type { EventHandler, HandlerFilter, HandlerResult, SorobanEventInput } from "./types.js";
 
 interface RegisteredHandler {
   filter: HandlerFilter;
@@ -35,16 +31,63 @@ export class HandlerRegistry {
       .map(({ handler }) => handler);
   }
 
-  async dispatch(event: SorobanEventInput): Promise<HandlerResult[]> {
+  async dispatch(event: SorobanEventInput, eventRepo?: EventRepository): Promise<HandlerResult[]> {
+    let identity:
+      | {
+          contractId: string;
+          ledgerNumber: number;
+          txHash: string;
+          eventIndex: number;
+        }
+      | undefined;
+
+    if (eventRepo) {
+      identity = getSorobanEventIdentity(event);
+      const isProcessed = await eventRepo.isEventProcessed(
+        identity.contractId,
+        identity.ledgerNumber,
+        identity.txHash,
+        identity.eventIndex,
+      );
+      if (isProcessed) {
+        return [];
+      }
+    }
+
     const handlers = this.matches(event);
-    return Promise.all(
+
+    if (handlers.length === 0) {
+      if (eventRepo && identity) {
+        await eventRepo.recordEventProcessed(
+          identity.contractId,
+          identity.ledgerNumber,
+          identity.txHash,
+          identity.eventIndex,
+        );
+      }
+      return [];
+    }
+
+    const results = await Promise.all(
       handlers.map((h) =>
         h(event).catch((err) => ({
           ok: false as const,
           error: err instanceof Error ? err.message : String(err),
           retriable: true,
-        }))
-      )
+        })),
+      ),
     );
+
+    const allSucceeded = results.every((r) => r.ok);
+    if (allSucceeded && eventRepo && identity) {
+      await eventRepo.recordEventProcessed(
+        identity.contractId,
+        identity.ledgerNumber,
+        identity.txHash,
+        identity.eventIndex,
+      );
+    }
+
+    return results;
   }
 }

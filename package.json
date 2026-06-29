@@ -40,7 +40,9 @@
     "indexer:format": "cd indexer && biome format --write .",
     "indexer:lint": "cd indexer && biome check .",
     "indexer:test": "turbo run test --filter=@fundable-indexer/common --filter=@fundable-indexer/streams --filter=@fundable-indexer/distributions",
-    "indexer:type-check": "turbo run type-check --filter=@fundable-indexer/common --filter=@fundable-indexer/streams --filter=@fundable-indexer/distributions"
+    "indexer:type-check": "turbo run type-check --filter=@fundable-indexer/common --filter=@fundable-indexer/streams --filter=@fundable-indexer/distributions",
+    "indexer:streams": "bun --filter=@fundable-indexer/streams start",
+    "indexer:distributions": "bun --filter=@fundable-indexer/distributions start"
   },
   "c8": {
     "include": [

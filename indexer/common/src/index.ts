@@ -12,6 +12,15 @@ export {
 } from "./config/index.js";
 export { createSorobanClient, sorobanClient } from "./rpc/client.js";
 export { IndexedEvent } from "./db/entity/IndexedEvent.js";
-export { EventRepository } from "./db/repository.js";
-export { SorobanPoller, type PollerOptions, type PollResult } from "./poller/index.js";
+export {
+  EventRepository,
+  getSorobanEventIdentity,
+  type EventIdentity,
+} from "./db/repository.js";
+export {
+  SorobanPoller,
+  type PollerOptions,
+  type PollResult,
+} from "./poller/index.js";
+export { runIndexer, type RunnerOptions } from "./poller/runner.js";
 export * from "./handlers/index.js";
