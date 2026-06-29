@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+// Runtime/database configuration loader (validated, fail-fast). Exposed as
+// `loadIndexerConfig` to avoid colliding with the RPC `loadConfig` below.
+export {
+  ConfigValidationError,
+  loadConfig as loadIndexerConfig,
+  type IndexerConfig,
+} from "./env.js";
+
 export const ConfigSchema = z.object({
   RPC_URL: z.string().url().default("https://soroban-testnet.stellar.org"),
   NETWORK_PASSPHRASE: z.string().default("Test SDF Network ; September 2015"),

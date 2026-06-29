@@ -3,7 +3,13 @@ export const commonPackage = {
   role: "shared-infrastructure",
 } as const;
 
-export { config, loadConfig } from "./config/index.js";
+export {
+  ConfigValidationError,
+  config,
+  loadConfig,
+  loadIndexerConfig,
+  type IndexerConfig,
+} from "./config/index.js";
 export { createSorobanClient, sorobanClient } from "./rpc/client.js";
 export { IndexedEvent } from "./db/entity/IndexedEvent.js";
 export { EventRepository } from "./db/repository.js";

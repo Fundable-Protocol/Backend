@@ -41,8 +41,25 @@ just lint
 Indexer environment variables are documented in the repository root
 `.env.example` under "Soroban indexer".
 
+The `common` package exposes a validated config loader (`loadIndexerConfig`)
+that reads these variables, parses numeric values (`INDEXER_PORT`,
+`POLL_INTERVAL_MS`, `START_LEDGER`), and fails fast with a clear error when
+required values are missing or malformed.
+
+## Database & Migrations
+
+Persistence uses PostgreSQL with [TypeORM](https://typeorm.io). Entities live
+under each workspace's `src/db/entity/` (e.g. `common/src/db/entity/`,
+`streams/src/db/entity/`), with the shared `EventRepository` in
+`common/src/db/repository.ts`. Migrations are kept per workspace under
+`src/db/migrations/`.
+
+TypeORM relies on decorator metadata, which is enabled in `tsconfig.base.json`
+via `experimentalDecorators` and `emitDecoratorMetadata`.
+
 ## Status
 
-This workspace is currently a scaffold. The poller, database repositories,
-cursor persistence, event handlers, and GraphQL API are planned but not yet
-implemented.
+This workspace provides the indexer foundation — validated config, a Soroban RPC
+client, a TypeORM persistence layer (entities and repository), a poller, and an
+event-handler registry, plus the streams and distributions handlers. The GraphQL
+API is planned but not yet implemented.
