@@ -1,15 +1,19 @@
 import { Response } from 'express';
 
 import walletRepository from './wallet.services';
-import { handleResponse } from '../../../utils/helper';
+import { sendSuccess, sendError } from '../../../utils/apiResponse';
 import { IRequest } from '../../../types/global';
 
 export const listWallets = async (req: IRequest, res: Response) => {
-    const queryObject = {};
-
-    const wallets = await walletRepository.findBy(queryObject);
-
-    return handleResponse(res, {
-        data: wallets,
-    });
+    try {
+        const wallets = await walletRepository.find();
+        return sendSuccess(res, wallets);
+    } catch (error) {
+        const err = error as Error;
+        return sendError(res, 500, {
+            code: 'WALLET_LIST_FAILED',
+            message: 'Failed to retrieve wallets',
+            details: { reason: err.message },
+        });
+    }
 };
