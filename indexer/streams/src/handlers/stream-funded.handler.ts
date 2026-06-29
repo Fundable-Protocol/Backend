@@ -1,8 +1,4 @@
-import type {
-  EventHandler,
-  HandlerResult,
-  SorobanEventInput,
-} from "@fundable-indexer/common";
+import type { EventHandler, HandlerResult, SorobanEventInput } from "@fundable-indexer/common";
 import { parseStreamFunded } from "./types.js";
 
 export const streamFundedHandler: EventHandler = async (
@@ -12,23 +8,43 @@ export const streamFundedHandler: EventHandler = async (
     const payload = parseStreamFunded(event.data);
 
     if (!payload.streamId) {
-      return { ok: false, error: "Missing streamId in funded event", retriable: false };
+      return {
+        ok: false,
+        error: "Missing streamId in funded event",
+        retriable: false,
+      };
     }
 
     if (!payload.sender) {
-      return { ok: false, error: "Missing sender in funded event", retriable: false };
+      return {
+        ok: false,
+        error: "Missing sender in funded event",
+        retriable: false,
+      };
     }
 
     if (!payload.token) {
-      return { ok: false, error: "Missing token in funded event", retriable: false };
+      return {
+        ok: false,
+        error: "Missing token in funded event",
+        retriable: false,
+      };
     }
 
     if (!payload.amount) {
-      return { ok: false, error: "Missing amount in funded event", retriable: false };
+      return {
+        ok: false,
+        error: "Missing amount in funded event",
+        retriable: false,
+      };
     }
 
     if (!payload.transactionHash) {
-      return { ok: false, error: "Missing transactionHash in funded event", retriable: false };
+      return {
+        ok: false,
+        error: "Missing transactionHash in funded event",
+        retriable: false,
+      };
     }
 
     // TODO(#32): persist deposit via stream repository once DB schema is merged

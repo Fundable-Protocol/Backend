@@ -15,7 +15,10 @@ export class WithdrawalAction {
   id!: string;
 
   @Index()
-  @Column({ type: "varchar", comment: "The ID of the stream this withdrawal belongs to" })
+  @Column({
+    type: "varchar",
+    comment: "The ID of the stream this withdrawal belongs to",
+  })
   streamId!: string;
 
   @ManyToOne(() => Stream, { onDelete: "CASCADE" })
@@ -28,7 +31,10 @@ export class WithdrawalAction {
   @Column({ type: "bigint", comment: "The amount withdrawn" })
   amount!: string;
 
-  @Column({ type: "varchar", comment: "Transaction hash where withdrawal occurred" })
+  @Column({
+    type: "varchar",
+    comment: "Transaction hash where withdrawal occurred",
+  })
   txHash!: string;
 
   @Column({ type: "bigint", comment: "Timestamp of the withdrawal" })

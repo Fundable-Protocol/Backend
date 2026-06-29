@@ -8,9 +8,7 @@ export interface SorobanEventInput {
   pagingToken: string;
 }
 
-export type HandlerResult =
-  | { ok: true }
-  | { ok: false; error: string; retriable: boolean };
+export type HandlerResult = { ok: true } | { ok: false; error: string; retriable: boolean };
 
 export type EventHandler = (event: SorobanEventInput) => Promise<HandlerResult>;
 

@@ -19,6 +19,10 @@ export interface IndexerConfig {
   readonly startLedger?: number;
   /** Logging verbosity. */
   readonly logLevel: "error" | "warn" | "info" | "debug";
+  /** Configured Stellar contract IDs for streams indexer. */
+  readonly streamsContractIds: string[];
+  /** Configured Stellar contract IDs for distributions indexer. */
+  readonly distributionsContractIds: string[];
 }
 
 /** A positive integer parsed from an environment string. */
@@ -40,6 +44,30 @@ const configSchema = z.object({
   POLL_INTERVAL_MS: positiveIntFromString,
   START_LEDGER: positiveIntFromString.optional(),
   INDEXER_LOG_LEVEL: z.enum(["error", "warn", "info", "debug"]).optional().default("info"),
+  STREAMS_CONTRACT_IDS: z
+    .string()
+    .optional()
+    .default("")
+    .transform((val) =>
+      val
+        ? val
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [],
+    ),
+  DISTRIBUTIONS_CONTRACT_IDS: z
+    .string()
+    .optional()
+    .default("")
+    .transform((val) =>
+      val
+        ? val
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [],
+    ),
 });
 
 /**
@@ -69,6 +97,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): IndexerConfig 
     "POLL_INTERVAL_MS",
     "START_LEDGER",
     "INDEXER_LOG_LEVEL",
+    "STREAMS_CONTRACT_IDS",
+    "DISTRIBUTIONS_CONTRACT_IDS",
   ]) {
     const value = env[key];
     normalized[key] = value === undefined || value.trim() === "" ? undefined : value;
@@ -89,6 +119,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): IndexerConfig 
     port: parsed.INDEXER_PORT,
     pollIntervalMs: parsed.POLL_INTERVAL_MS,
     logLevel: parsed.INDEXER_LOG_LEVEL,
+    streamsContractIds: parsed.STREAMS_CONTRACT_IDS,
+    distributionsContractIds: parsed.DISTRIBUTIONS_CONTRACT_IDS,
     ...(parsed.START_LEDGER !== undefined ? { startLedger: parsed.START_LEDGER } : {}),
   };
 

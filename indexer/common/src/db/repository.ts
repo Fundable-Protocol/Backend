@@ -1,5 +1,44 @@
 import type { DataSource, Repository } from "typeorm";
+import type { SorobanEventInput } from "../handlers/types.js";
 import { IndexedEvent } from "./entity/IndexedEvent.js";
+
+export interface EventIdentity {
+  contractId: string;
+  ledgerNumber: number;
+  txHash: string;
+  eventIndex: number;
+}
+
+/**
+ * Maps a SorobanEventInput to its deterministic event identity fields.
+ */
+export function getSorobanEventIdentity(event: SorobanEventInput): EventIdentity {
+  let txHash = event.pagingToken || event.id || "";
+  let eventIndex = 0;
+
+  if (event.id?.includes("-")) {
+    const parts = event.id.split("-");
+    const lastPart = parts[parts.length - 1];
+    if (lastPart && /^\d+$/.test(lastPart)) {
+      eventIndex = Number.parseInt(lastPart, 10);
+      txHash = parts.slice(0, -1).join("-");
+    }
+  } else if (event.pagingToken?.includes("-")) {
+    const parts = event.pagingToken.split("-");
+    const lastPart = parts[parts.length - 1];
+    if (lastPart && /^\d+$/.test(lastPart)) {
+      eventIndex = Number.parseInt(lastPart, 10);
+      txHash = parts.slice(0, -1).join("-");
+    }
+  }
+
+  return {
+    contractId: event.contractId,
+    ledgerNumber: event.ledger,
+    txHash,
+    eventIndex,
+  };
+}
 
 export class EventRepository {
   private repo: Repository<IndexedEvent>;

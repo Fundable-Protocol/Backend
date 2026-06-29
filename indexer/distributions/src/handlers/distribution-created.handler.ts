@@ -1,8 +1,4 @@
-import type {
-  EventHandler,
-  HandlerResult,
-  SorobanEventInput,
-} from "@fundable-indexer/common";
+import type { EventHandler, HandlerResult, SorobanEventInput } from "@fundable-indexer/common";
 import { parseDistributionCreated } from "./types.js";
 
 export const distributionCreatedHandler: EventHandler = async (

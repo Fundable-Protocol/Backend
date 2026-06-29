@@ -86,7 +86,10 @@ export class SorobanPoller {
       return { success: true, lastProcessedLedger: endLedger };
     } catch (error) {
       // Return the error to surface it. Cursor is intentionally not advanced.
-      return { success: false, error: error instanceof Error ? error : new Error(String(error)) };
+      return {
+        success: false,
+        error: error instanceof Error ? error : new Error(String(error)),
+      };
     }
   }
 }

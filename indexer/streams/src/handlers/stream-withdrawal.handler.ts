@@ -1,8 +1,4 @@
-import type {
-  EventHandler,
-  HandlerResult,
-  SorobanEventInput,
-} from "@fundable-indexer/common";
+import type { EventHandler, HandlerResult, SorobanEventInput } from "@fundable-indexer/common";
 import { parseStreamWithdrawal } from "./types.js";
 
 export const streamWithdrawalHandler: EventHandler = async (
@@ -12,19 +8,35 @@ export const streamWithdrawalHandler: EventHandler = async (
     const payload = parseStreamWithdrawal(event.data);
 
     if (!payload.streamId) {
-      return { ok: false, error: "Missing streamId in withdrawal event", retriable: false };
+      return {
+        ok: false,
+        error: "Missing streamId in withdrawal event",
+        retriable: false,
+      };
     }
 
     if (!payload.recipient) {
-      return { ok: false, error: "Missing recipient in withdrawal event", retriable: false };
+      return {
+        ok: false,
+        error: "Missing recipient in withdrawal event",
+        retriable: false,
+      };
     }
 
     if (!payload.amount) {
-      return { ok: false, error: "Missing amount in withdrawal event", retriable: false };
+      return {
+        ok: false,
+        error: "Missing amount in withdrawal event",
+        retriable: false,
+      };
     }
 
     if (!payload.transactionHash) {
-      return { ok: false, error: "Missing transactionHash in withdrawal event", retriable: false };
+      return {
+        ok: false,
+        error: "Missing transactionHash in withdrawal event",
+        retriable: false,
+      };
     }
 
     // TODO(#32): record withdrawal action via repository once DB schema is merged
