@@ -63,3 +63,9 @@ This workspace provides the indexer foundation — validated config, a Soroban R
 client, a TypeORM persistence layer (entities and repository), a poller, and an
 event-handler registry, plus the streams and distributions handlers. The GraphQL
 API is planned but not yet implemented.
+# Indexer Migration Workflow
+
+To run migrations for the indexer:
+1. Ensure INDEXER_DATABASE_URL is set in your .env.
+2. Run: 'bun run migration:run'
+3. To revert: 'bun run migration:revert'
