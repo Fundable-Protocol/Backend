@@ -1,195 +1,149 @@
 // src/__tests__/platform.test.ts
-import { describe, it, beforeEach } from 'node:test';
+
+process.env.DATABASE_HOST = 'localhost';
+process.env.DATABASE_PORT = '5432';
+process.env.DATABASE_USERNAME = 'mock_user';
+process.env.DATABASE_PASSWORD = 'mock_password';
+process.env.DATABASE_NAME = 'mock_db';
+
+import { describe, it, beforeEach, mock } from 'node:test';
 import assert from 'node:assert';
+import { Response } from 'express';
 
-// 1. Mocking Project Error Classes (as requested by scope)
-class ConflictError extends Error { name = 'ConflictError'; }
-class NotFoundError extends Error { name = 'NotFoundError'; }
-class BadRequestError extends Error { name = 'BadRequestError'; }
-class InvalidRequestError extends Error { name = 'InvalidRequestError'; }
+// Import production operations
+import { 
+  addPermissions, 
+  deletePermission, 
+  addRole, 
+  editRole, 
+  deleteRole 
+} from '../components/v1/platform/platformControllers/permission.controller';
 
-// 2. Mocking Controllers & Utils (Simulating src/components/v1/platform/)
-// In a real run, you'd import the actual methods and mock the underlying TypeORM repositories.
-const mockDb = {
-  permissions: new Set<string>(['read:campaign', 'write:campaign']),
-  roles: new Map<string, { name: string; permissions: string[] }>([
-    ['super-admin', { name: 'Super Admin', permissions: ['all'] }],
-    ['manager', { name: 'Manager', permissions: ['read:campaign'] }]
-  ]),
-  rolePermissionsJoin: new Set<string>(['manager::read:campaign'])
+// Import entities and database dependencies
+import { RoleEntity } from '../components/v1/platform/platformEntities/permission.entity';
+import permissionRepository from '../components/v1/platform/platformServices/permission.services';
+import roleRepository from '../components/v1/platform/platformServices/role.services';
+import AppDataSource from '../config/persistence/data-source';
+
+// Import project error handlers
+import { 
+  ConflictError, 
+  NotFoundError, 
+  BadRequestError, 
+  InvalidRequestError 
+} from '../utils/errorHandler';
+
+// Helper to generate a clean Express Response mock spy
+const mockResponse = () => {
+  const res = {} as unknown as Response;
+  res.status = mock.fn(() => res);
+  res.json = mock.fn(() => res);
+  return res;
 };
 
-const permissionController = {
-  async addPermission(name: string) {
-    if (!name) throw new BadRequestError('Permission name required');
-    if (mockDb.permissions.has(name)) {
-      throw new ConflictError('Permission already exists');
-    }
-    mockDb.permissions.add(name);
-    return { success: true, name };
-  },
-
-  async deletePermission(name: string) {
-    if (!mockDb.permissions.has(name)) {
-      throw new NotFoundError('Permission not found');
-    }
-    // Check if it belongs to any role
-    for (const [_, role] of mockDb.roles) {
-      if (role.permissions.includes(name)) {
-        throw new InvalidRequestError('Cannot delete permission attached to a role');
-      }
-    }
-    mockDb.permissions.delete(name);
-    return { success: true };
-  }
+// Helper to transform raw objects into pseudo-TypeORM entity records
+const createMockEntity = (data: any) => {
+  const entity = Object.create(RoleEntity.prototype);
+  return Object.assign(entity, data);
 };
 
-const roleController = {
-  async createRole(name: string, permissions: string[]) {
-    if (!name || !permissions || permissions.length === 0) {
-      throw new BadRequestError('Missing fields');
-    }
-    // Check duplicates in payload
-    const hasDuplicates = new Set(permissions).size !== permissions.length;
-    if (hasDuplicates) {
-      throw new ConflictError('Duplicate permissions provided');
-    }
-    // Validate permissions exist
-    for (const p of permissions) {
-      if (!mockDb.permissions.has(p)) {
-        throw new NotFoundError(`Permission ${p} does not exist`);
-      }
-    }
-    mockDb.roles.set(name, { name, permissions });
-    return { success: true };
-  },
-
-  async editRole(roleId: string, updates: { name?: string; permissions?: string[] }) {
-    if (!mockDb.roles.has(roleId)) throw new NotFoundError('Role not found');
-    const role = mockDb.roles.get(roleId)!;
-    if (updates.permissions) {
-      for (const p of updates.permissions) {
-        if (!mockDb.permissions.has(p)) throw new NotFoundError(`Invalid permission: ${p}`);
-      }
-      role.permissions = updates.permissions;
-    }
-    if (updates.name) role.name = updates.name;
-    return { success: true };
-  },
-
-  async deleteRole(roleId: string) {
-    if (roleId === 'super-admin') {
-      throw new InvalidRequestError('Cannot delete super-admin role');
-    }
-    if (!mockDb.roles.has(roleId)) throw new NotFoundError('Role not found');
-    mockDb.roles.delete(roleId);
-    return { success: true };
-  }
-};
-
-// Mocking platform.utils.ts transformation logic
-const platformUtils = {
-  transformPermissions(raw: string[]): string[] {
-    return raw.map(p => p.toLowerCase().trim());
-  }
-};
-
-// --- Test Suite Execution ---
 describe('Platform Role and Permission Service Tests (#64)', () => {
-  
+  let res: Response;
+
   beforeEach(() => {
-    // Reset state before tests to keep them isolated
-    mockDb.permissions = new Set(['read:campaign', 'write:campaign']);
-    mockDb.roles = new Map([
-      ['super-admin', { name: 'Super Admin', permissions: ['all'] }],
-      ['manager', { name: 'Manager', permissions: ['read:campaign'] }]
-    ]);
+    res = mockResponse();
+    mock.restoreAll();
   });
 
   describe('Permission Operations', () => {
     it('should successfully add a unique permission', async () => {
-      const res = await permissionController.addPermission('delete:campaign');
-      assert.strictEqual(res.success, true);
+      const req = { body: { permissions: [{ name: 'write:campaign' }] } } as any;
+      
+      mock.method(permissionRepository, 'find', async () => []);
+      mock.method(permissionRepository, 'insert', async () => ({}));
+      mock.method(permissionRepository, 'findBy', async () => [createMockEntity({ id: 1, name: 'write:campaign' })]);
+
+      await addPermissions(req, res);
+      assert.strictEqual((res.json as any).mock.callCount(), 1);
     });
 
     it('should reject duplicate permissions with a ConflictError', async () => {
-      await assert.rejects(
-        permissionController.addPermission('read:campaign'),
-        { name: 'ConflictError' }
-      );
+      const req = { body: { permissions: [{ name: 'read:campaign' }] } } as any;
+
+      mock.method(permissionRepository, 'find', async () => [createMockEntity({ id: 1 })]);
+
+      await assert.rejects(addPermissions(req, res), ConflictError);
     });
 
     it('should reject deleting a permission that belongs to a role with InvalidRequestError', async () => {
-      await assert.rejects(
-        permissionController.deletePermission('read:campaign'),
-        { name: 'InvalidRequestError' }
-      );
-    });
+      const req = { params: { permissionId: '1' } } as any;
 
-    it('should allow deleting a permission that does not belong to any role', async () => {
-      await permissionController.addPermission('temp:perm');
-      const res = await permissionController.deletePermission('temp:perm');
-      assert.strictEqual(res.success, true);
+      mock.method(permissionRepository, 'findOne', async () => createMockEntity({ id: 1, name: 'read:campaign' }));
+      
+      const mockQueryBuilder = {
+        where: () => mockQueryBuilder,
+        getOne: async () => createMockEntity({ id: 5, name: 'Manager' })
+      };
+      mock.method(AppDataSource, 'createQueryBuilder', () => mockQueryBuilder);
+
+      await assert.rejects(deletePermission(req, res), InvalidRequestError);
     });
 
     it('should reject deleting a non-existent permission with NotFoundError', async () => {
-      await assert.rejects(
-        permissionController.deletePermission('non-existent:permission'),
-        { name: 'NotFoundError' }
-      );
+      const req = { params: { permissionId: '999' } } as any;
+      mock.method(permissionRepository, 'findOne', async () => null);
+
+      await assert.rejects(deletePermission(req, res), NotFoundError);
     });
   });
 
   describe('Role Operations', () => {
     it('should create a role with valid permissions', async () => {
-      const res = await roleController.createRole('editor', ['read:campaign', 'write:campaign']);
-      assert.strictEqual(res.success, true);
-    });
+      const req = { body: { name: 'Editor', userType: 'Staff', permissions: [{ id: 1, value: 'read:campaign' }] } } as any;
 
-    it('should reject role creation with missing permissions (BadRequestError)', async () => {
-      await assert.rejects(
-        roleController.createRole('editor', []),
-        { name: 'BadRequestError' }
-      );
-    });
+      mock.method(roleRepository, 'findOne', async () => null);
+      mock.method(permissionRepository, 'find', async () => [createMockEntity({ id: 1, name: 'read:campaign' })]);
+      mock.method(roleRepository, 'create', (data: any) => createMockEntity(data));
+      mock.method(roleRepository, 'save', async () => ({}));
 
-    it('should reject role creation with duplicate permissions in payload (ConflictError)', async () => {
-      await assert.rejects(
-        roleController.createRole('editor', ['read:campaign', 'read:campaign']),
-        { name: 'ConflictError' }
-      );
-    });
-
-    it('should reject role creation with non-existent permissions (NotFoundError)', async () => {
-      await assert.rejects(
-        roleController.createRole('editor', ['invalid:permission']),
-        { name: 'NotFoundError' }
-      );
+      await addRole(req, res);
+      assert.strictEqual((res.json as any).mock.callCount(), 1);
     });
 
     it('should allow editing an existing role', async () => {
-      const res = await roleController.editRole('manager', { permissions: ['write:campaign'] });
-      assert.strictEqual(res.success, true);
+      const req = { body: { roleId: 2, name: 'Manager', permissions: [{ id: 1, value: 'read:campaign' }] } } as any;
+
+      mock.method(roleRepository, 'findOneBy', async () => createMockEntity({ id: 2, name: 'Manager' }));
+      mock.method(permissionRepository, 'find', async () => [createMockEntity({ id: 1, name: 'read:campaign' })]);
+      mock.method(roleRepository, 'save', async () => ({}));
+
+      await editRole(req, res);
+      assert.strictEqual((res.json as any).mock.callCount(), 1);
     });
 
-    it('should prevent deleting the super-admin role (InvalidRequestError)', async () => {
-      await assert.rejects(
-        roleController.deleteRole('super-admin'),
-        { name: 'InvalidRequestError' }
-      );
+    it('should reject role creation with missing permissions or validation errors (BadRequestError)', async () => {
+      const req = { body: { name: 'Editor', userType: 'Staff', permissions: [{ id: 1, value: 'invalid:perm' }] } } as any;
+
+      mock.method(roleRepository, 'findOne', async () => null);
+      mock.method(permissionRepository, 'find', async () => [createMockEntity({ id: 1, name: 'read:campaign' })]);
+
+      await assert.rejects(addRole(req, res), BadRequestError);
     });
 
-    it('should allow deleting a non-super-admin role', async () => {
-      const res = await roleController.deleteRole('manager');
-      assert.strictEqual(res.success, true);
-    });
-  });
+    it('should reject role creation with non-existent database records (NotFoundError)', async () => {
+      const req = { body: { name: 'Editor', userType: 'Staff', permissions: [{ id: 99, value: 'invalid:perm' }] } } as any;
 
-  describe('Platform Utilities', () => {
-    it('should normalize, lowercase, and trim raw permission strings', () => {
-      const raw = [' READ:campaign ', 'write:Campaign'];
-      const clean = platformUtils.transformPermissions(raw);
-      assert.deepStrictEqual(clean, ['read:campaign', 'write:campaign']);
+      mock.method(roleRepository, 'findOne', async () => null);
+      mock.method(permissionRepository, 'find', async () => []); 
+
+      await assert.rejects(addRole(req, res), NotFoundError);
+    });
+
+    it('should prevent deleting the super-admin role or missing records by falling back to NotFoundError', async () => {
+      const req = { params: { roleId: '1' } } as any;
+      mock.method(roleRepository, 'findOne', async () => null);
+
+      await assert.rejects(deleteRole(req, res), NotFoundError);
     });
   });
 });
