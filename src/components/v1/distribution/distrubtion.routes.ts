@@ -13,13 +13,13 @@ import {
 
 const distributionRouter = new EnhancedRouter()
 
-distributionRouter.get("/", listDistributions)
-distributionRouter.post("/", policyMiddleware(createDistributionSchema), createDistribution)
+distributionRouter.get("/", listDistributions())
+distributionRouter.post("/", policyMiddleware(createDistributionSchema), createDistribution())
 distributionRouter.patch(
   "/:id",
   policyMiddleware(updateDistributionParamsSchema, "params"),
   policyMiddleware(updateDistributionSchema),
-  updateDistribution,
+  updateDistribution(),
 )
 
 export default distributionRouter.getRouter()
