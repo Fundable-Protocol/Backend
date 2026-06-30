@@ -59,6 +59,13 @@ export class DistributionBatch {
   resumedAt!: string | null;
 
   @Column({
+    type: "int",
+    nullable: true,
+    comment: "Ledger of the last applied status change, used to reject stale pause/resume writes",
+  })
+  statusLedger!: number | null;
+
+  @Column({
     type: "varchar",
     unique: true,
     comment: "Unique reference for the batch (on-chain distribution ID)",

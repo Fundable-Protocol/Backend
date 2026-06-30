@@ -45,7 +45,7 @@ export function parseDistributionCreated(data: unknown): DistributionCreatedPayl
     distributionId: str(d.distributionId ?? d.distribution_id),
     creator: str(d.creator),
     token: str(d.token),
-    totalAmount: str(d.totalAmount ?? d.total_amount ?? "0"),
+    totalAmount: str(d.totalAmount ?? d.total_amount),
     recipientCount: num(d.recipientCount ?? d.recipient_count),
     transactionHash: str(d.transactionHash ?? d.tx_hash),
   };

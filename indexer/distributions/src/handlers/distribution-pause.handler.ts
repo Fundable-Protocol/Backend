@@ -50,6 +50,7 @@ export const createDistributionPausedHandler = (deps: DistributionHandlerDeps): 
       await deps.distributions.setStatus({
         distributionId: payload.distributionId,
         status: DistributionStatus.PAUSED,
+        ledgerNumber: event.ledger,
         changedAt: event.ledgerClosedAt,
       });
 
@@ -118,6 +119,7 @@ export const createDistributionResumedHandler = (deps: DistributionHandlerDeps):
       await deps.distributions.setStatus({
         distributionId: payload.distributionId,
         status: DistributionStatus.ACTIVE,
+        ledgerNumber: event.ledger,
         changedAt: event.ledgerClosedAt,
       });
 

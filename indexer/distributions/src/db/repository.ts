@@ -25,10 +25,15 @@ export interface RecordClaimInput {
   eventTimestamp: string;
 }
 
+/** The only status transitions the pause/resume handlers drive. */
+export type PauseResumeStatus = DistributionStatus.ACTIVE | DistributionStatus.PAUSED;
+
 /** Payload required to apply a pause/resume status change. */
 export interface SetStatusInput {
   distributionId: string;
-  status: DistributionStatus;
+  status: PauseResumeStatus;
+  /** Ledger the status-change event was observed at, used to reject stale writes. */
+  ledgerNumber: number;
   /** ISO timestamp the event closed at, recorded on the matching status field. */
   changedAt: string;
 }
@@ -121,15 +126,26 @@ export class DistributionRepository implements DistributionPersistence {
   /**
    * Applies a paused/resumed status change, recording the timestamp on the
    * matching field. No-op if the batch does not exist.
+   *
+   * The update is guarded by `statusLedger` so a stale (out-of-order) pause or
+   * resume cannot overwrite state produced by a newer event — important when an
+   * earlier event is retried after its sibling already advanced the status.
    */
   async setStatus(input: SetStatusInput): Promise<void> {
     const patch: Partial<DistributionBatch> =
       input.status === DistributionStatus.PAUSED
-        ? { status: input.status, pausedAt: input.changedAt }
-        : { status: input.status, resumedAt: input.changedAt };
+        ? { status: input.status, pausedAt: input.changedAt, statusLedger: input.ledgerNumber }
+        : { status: input.status, resumedAt: input.changedAt, statusLedger: input.ledgerNumber };
 
     await this.dataSource
       .getRepository(DistributionBatch)
-      .update({ id: input.distributionId }, patch);
+      .createQueryBuilder()
+      .update(DistributionBatch)
+      .set(patch)
+      .where(
+        '"id" = :distributionId AND ("statusLedger" IS NULL OR "statusLedger" <= :ledgerNumber)',
+        { distributionId: input.distributionId, ledgerNumber: input.ledgerNumber },
+      )
+      .execute();
   }
 }

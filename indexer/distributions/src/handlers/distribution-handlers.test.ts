@@ -126,6 +126,23 @@ describe("distributionCreatedHandler", () => {
     expect(calls.createBatch).toHaveLength(0);
   });
 
+  test("returns error and does not persist when total_amount is missing", async () => {
+    const event: SorobanEventInput = {
+      ...baseEvent,
+      data: {
+        distribution_id: "dist-1",
+        creator: "GCREATOR",
+        token: "USDC",
+        recipient_count: 50,
+        tx_hash: "txabc",
+      },
+    };
+
+    const result = await createDistributionCreatedHandler(deps)(event);
+    expect(result).toMatchObject({ ok: false, retriable: false });
+    expect(calls.createBatch).toHaveLength(0);
+  });
+
   test("returns error when recipientCount is not positive", async () => {
     const event: SorobanEventInput = {
       ...baseEvent,
@@ -297,6 +314,7 @@ describe("distributionPausedHandler", () => {
     expect(calls.setStatus[0]).toMatchObject({
       distributionId: "dist-1",
       status: "PAUSED",
+      ledgerNumber: 300,
       changedAt: "2024-06-15T00:00:00Z",
     });
   });
@@ -357,6 +375,7 @@ describe("distributionResumedHandler", () => {
     expect(calls.setStatus[0]).toMatchObject({
       distributionId: "dist-1",
       status: "ACTIVE",
+      ledgerNumber: 300,
       changedAt: "2024-06-15T00:00:00Z",
     });
   });
