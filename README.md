@@ -266,14 +266,14 @@ For local development without a chain connection:
 
 ## API: List Wallets
 
-**GET** `/v1/wallets` (JWT required)
+**GET** `/api/v1/wallets` (JWT + admin required)
 
 Returns a list of all wallets in the system.
 
 Request:
 
 ```bash
-curl -H "Authorization: Bearer <JWT_TOKEN>" http://localhost:3000/v1/wallets
+curl -H "Authorization: Bearer <JWT_TOKEN>" http://localhost:3000/api/v1/wallets
 ```
 
 Response (Success - 200):

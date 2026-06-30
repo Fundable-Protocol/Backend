@@ -1,11 +1,14 @@
 import { Router } from 'express';
 
-import { requireJwtAuthApi } from '../../../appMiddlewares/jwtAuth.api';
+import {
+    requireAdminApi,
+    requireJwtAuthApi,
+} from '../../../appMiddlewares/jwtAuth.api';
 import { listWallets } from './wallet.controller';
 
 const router = Router();
 
-// List all wallets (JWT required)
-router.get('/', requireJwtAuthApi, listWallets);
+// List all wallets (JWT + admin required)
+router.get('/', requireJwtAuthApi, requireAdminApi, listWallets);
 
 export default router;
