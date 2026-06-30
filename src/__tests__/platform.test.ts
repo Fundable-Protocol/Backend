@@ -10,7 +10,7 @@ import { describe, it, beforeEach, mock } from 'node:test';
 import assert from 'node:assert';
 import { Response } from 'express';
 
-// Import production operations
+// Import production operations directly from permissioncontroller
 import { 
   addPermissions, 
   deletePermission, 
@@ -19,13 +19,14 @@ import {
   deleteRole 
 } from '../components/v1/platform/platformControllers/permission.controller';
 
-// Import entities and database dependencies
+// Import all structural entities directly to align the metadata schemas
 import { RoleEntity } from '../components/v1/platform/platformEntities/permission.entity';
+import { PermissionEntity } from '../components/v1/platform/platformEntities/permission.entity';
 import permissionRepository from '../components/v1/platform/platformServices/permission.services';
 import roleRepository from '../components/v1/platform/platformServices/role.services';
 import AppDataSource from '../config/persistence/data-source';
 
-// Import project error handlers
+// Import project error handling classes
 import { 
   ConflictError, 
   NotFoundError, 
@@ -33,7 +34,7 @@ import {
   InvalidRequestError 
 } from '../utils/errorHandler';
 
-// Helper to generate a clean Express Response mock spy
+// Helper to generate an Express Response mock spy wrapper
 const mockResponse = () => {
   const res = {} as unknown as Response;
   res.status = mock.fn(() => res);
@@ -41,9 +42,9 @@ const mockResponse = () => {
   return res;
 };
 
-// Helper to transform raw objects into pseudo-TypeORM entity records
-const createMockEntity = (data: any) => {
-  const entity = Object.create(RoleEntity.prototype);
+// Polished Polymorphic Helper: Accepts the entity class type to instantiate the accurate prototype site map
+const createMockEntity = (data: any, EntityClass: { prototype: object } = RoleEntity) => {
+  const entity = Object.create(EntityClass.prototype);
   return Object.assign(entity, data);
 };
 
@@ -61,7 +62,7 @@ describe('Platform Role and Permission Service Tests (#64)', () => {
       
       mock.method(permissionRepository, 'find', async () => []);
       mock.method(permissionRepository, 'insert', async () => ({}));
-      mock.method(permissionRepository, 'findBy', async () => [createMockEntity({ id: 1, name: 'write:campaign' })]);
+      mock.method(permissionRepository, 'findBy', async () => [createMockEntity({ id: 1, name: 'write:campaign' }, PermissionEntity)]);
 
       await addPermissions(req, res);
       assert.strictEqual((res.json as any).mock.callCount(), 1);
@@ -70,7 +71,7 @@ describe('Platform Role and Permission Service Tests (#64)', () => {
     it('should reject duplicate permissions with a ConflictError', async () => {
       const req = { body: { permissions: [{ name: 'read:campaign' }] } } as any;
 
-      mock.method(permissionRepository, 'find', async () => [createMockEntity({ id: 1 })]);
+      mock.method(permissionRepository, 'find', async () => [createMockEntity({ id: 1 }, PermissionEntity)]);
 
       await assert.rejects(addPermissions(req, res), ConflictError);
     });
@@ -78,11 +79,11 @@ describe('Platform Role and Permission Service Tests (#64)', () => {
     it('should reject deleting a permission that belongs to a role with InvalidRequestError', async () => {
       const req = { params: { permissionId: '1' } } as any;
 
-      mock.method(permissionRepository, 'findOne', async () => createMockEntity({ id: 1, name: 'read:campaign' }));
+      mock.method(permissionRepository, 'findOne', async () => createMockEntity({ id: 1, name: 'read:campaign' }, PermissionEntity));
       
       const mockQueryBuilder = {
         where: () => mockQueryBuilder,
-        getOne: async () => createMockEntity({ id: 5, name: 'Manager' })
+        getOne: async () => createMockEntity({ id: 5, name: 'Manager' }, RoleEntity)
       };
       mock.method(AppDataSource, 'createQueryBuilder', () => mockQueryBuilder);
 
@@ -102,8 +103,8 @@ describe('Platform Role and Permission Service Tests (#64)', () => {
       const req = { body: { name: 'Editor', userType: 'Staff', permissions: [{ id: 1, value: 'read:campaign' }] } } as any;
 
       mock.method(roleRepository, 'findOne', async () => null);
-      mock.method(permissionRepository, 'find', async () => [createMockEntity({ id: 1, name: 'read:campaign' })]);
-      mock.method(roleRepository, 'create', (data: any) => createMockEntity(data));
+      mock.method(permissionRepository, 'find', async () => [createMockEntity({ id: 1, name: 'read:campaign' }, PermissionEntity)]);
+      mock.method(roleRepository, 'create', (data: any) => createMockEntity(data, RoleEntity));
       mock.method(roleRepository, 'save', async () => ({}));
 
       await addRole(req, res);
@@ -113,8 +114,8 @@ describe('Platform Role and Permission Service Tests (#64)', () => {
     it('should allow editing an existing role', async () => {
       const req = { body: { roleId: 2, name: 'Manager', permissions: [{ id: 1, value: 'read:campaign' }] } } as any;
 
-      mock.method(roleRepository, 'findOneBy', async () => createMockEntity({ id: 2, name: 'Manager' }));
-      mock.method(permissionRepository, 'find', async () => [createMockEntity({ id: 1, name: 'read:campaign' })]);
+      mock.method(roleRepository, 'findOneBy', async () => createMockEntity({ id: 2, name: 'Manager' }, RoleEntity));
+      mock.method(permissionRepository, 'find', async () => [createMockEntity({ id: 1, name: 'read:campaign' }, PermissionEntity)]);
       mock.method(roleRepository, 'save', async () => ({}));
 
       await editRole(req, res);
@@ -125,7 +126,7 @@ describe('Platform Role and Permission Service Tests (#64)', () => {
       const req = { body: { name: 'Editor', userType: 'Staff', permissions: [{ id: 1, value: 'invalid:perm' }] } } as any;
 
       mock.method(roleRepository, 'findOne', async () => null);
-      mock.method(permissionRepository, 'find', async () => [createMockEntity({ id: 1, name: 'read:campaign' })]);
+      mock.method(permissionRepository, 'find', async () => [createMockEntity({ id: 1, name: 'read:campaign' }, PermissionEntity)]);
 
       await assert.rejects(addRole(req, res), BadRequestError);
     });
