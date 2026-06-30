@@ -90,10 +90,9 @@ export const createStarknetCampaignClient = (_deps?: StarknetDeps): CairoCampaig
         calldata: [campaignRefFelt, low, high, donationToken],
       }
 
-      const result: ExecuteResult = await withRetry(async () => {
-        logger.info(`Submitting create_campaign tx for ref=${campaignRef}`)
-        return await account.execute(invocation)
-      })
+      logger.info(`Submitting create_campaign tx for ref=${campaignRef}`)
+      // Not wrapped in withRetry: retrying a state-changing execute can duplicate the transaction
+      const result: ExecuteResult = await account.execute(invocation)
 
       const transactionHash = result?.transaction_hash ?? result?.transactionHash
       if (!transactionHash) {

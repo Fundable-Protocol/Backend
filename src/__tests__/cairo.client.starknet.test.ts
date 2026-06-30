@@ -274,7 +274,8 @@ test("assertContractAccessible retries on provider failure and resolves on event
   }
 })
 
-test("createCampaign retries execute on transient failure and returns result on success", async () => {
+test("createCampaign calls execute exactly once and does not retry on failure", async () => {
+  // account.execute is state-mutating; retrying it could duplicate the on-chain transaction
   const prev = setEnv({ ...REQUIRED_ENV, CAMPAIGN_CREATED_EVENT_KEY: undefined })
   try {
     let calls = 0
@@ -282,38 +283,35 @@ test("createCampaign retries execute on transient failure and returns result on 
       account: {
         execute: async () => {
           calls++
-          if (calls < 2) throw new Error("transient RPC failure")
-          return { transaction_hash: "0xsuccesstx" }
-        },
-      },
-    })
-    const client = createStarknetCampaignClient(deps)
-    const result = await client.createCampaign({
-      campaignRef: "ABCDE",
-      targetAmount: "1",
-      donationToken: "0xtoken",
-    })
-    assert.equal(result.transactionHash, "0xsuccesstx")
-    assert.equal(calls, 2)
-  } finally {
-    restoreEnv(prev)
-  }
-})
-
-test("createCampaign throws after exhausting retries on persistent RPC failure", async () => {
-  const prev = setEnv({ ...REQUIRED_ENV, CAMPAIGN_CREATED_EVENT_KEY: undefined })
-  try {
-    const deps = makeDeps({
-      account: {
-        execute: async () => {
-          throw new Error("persistent RPC failure")
+          throw new Error("RPC failure")
         },
       },
     })
     const client = createStarknetCampaignClient(deps)
     await assert.rejects(
       () => client.createCampaign({ campaignRef: "ABCDE", targetAmount: "1", donationToken: "0xtoken" }),
-      { message: "persistent RPC failure" }
+      { message: "RPC failure" }
+    )
+    assert.equal(calls, 1, "execute must not be retried")
+  } finally {
+    restoreEnv(prev)
+  }
+})
+
+test("createCampaign propagates execute error immediately without retrying", async () => {
+  const prev = setEnv({ ...REQUIRED_ENV, CAMPAIGN_CREATED_EVENT_KEY: undefined })
+  try {
+    const deps = makeDeps({
+      account: {
+        execute: async () => {
+          throw new Error("node rejected transaction")
+        },
+      },
+    })
+    const client = createStarknetCampaignClient(deps)
+    await assert.rejects(
+      () => client.createCampaign({ campaignRef: "ABCDE", targetAmount: "1", donationToken: "0xtoken" }),
+      { message: "node rejected transaction" }
     )
   } finally {
     restoreEnv(prev)
