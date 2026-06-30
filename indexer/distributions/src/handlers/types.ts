@@ -39,9 +39,7 @@ function num(v: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-export function parseDistributionCreated(
-  data: unknown,
-): DistributionCreatedPayload {
+export function parseDistributionCreated(data: unknown): DistributionCreatedPayload {
   const d = record(data);
   return {
     distributionId: str(d.distributionId ?? d.distribution_id),
@@ -63,9 +61,7 @@ export function parseTokensClaimed(data: unknown): TokensClaimedPayload {
   };
 }
 
-export function parseDistributionPaused(
-  data: unknown,
-): DistributionPausedPayload {
+export function parseDistributionPaused(data: unknown): DistributionPausedPayload {
   const d = record(data);
   return {
     distributionId: str(d.distributionId ?? d.distribution_id),
@@ -74,9 +70,7 @@ export function parseDistributionPaused(
   };
 }
 
-export function parseDistributionResumed(
-  data: unknown,
-): DistributionResumedPayload {
+export function parseDistributionResumed(data: unknown): DistributionResumedPayload {
   const d = record(data);
   return {
     distributionId: str(d.distributionId ?? d.distribution_id),
