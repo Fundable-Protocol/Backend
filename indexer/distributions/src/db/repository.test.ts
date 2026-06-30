@@ -112,33 +112,54 @@ describe("DistributionRepository", () => {
     expect(updateQb.update).not.toHaveBeenCalled();
   });
 
-  it("applies a paused status with pausedAt", async () => {
+  it("applies a paused status with pausedAt and statusLedger", async () => {
     const repo = new DistributionRepository(mockDataSource as unknown as DataSource);
     await repo.setStatus({
       distributionId: "dist-1",
       // biome-ignore lint/suspicious/noExplicitAny: enum imported indirectly
       status: "PAUSED" as any,
+      ledgerNumber: 50,
       changedAt: "2024-06-15T00:00:00Z",
     });
 
-    expect(mockBatchRepo.update).toHaveBeenCalledWith(
-      { id: "dist-1" },
-      { status: "PAUSED", pausedAt: "2024-06-15T00:00:00Z" },
-    );
+    expect(createQb.set).toHaveBeenCalledWith({
+      status: "PAUSED",
+      pausedAt: "2024-06-15T00:00:00Z",
+      statusLedger: 50,
+    });
+    expect(createQb.execute).toHaveBeenCalled();
   });
 
-  it("applies a resumed status with resumedAt", async () => {
+  it("applies a resumed status with resumedAt and statusLedger", async () => {
     const repo = new DistributionRepository(mockDataSource as unknown as DataSource);
     await repo.setStatus({
       distributionId: "dist-1",
       // biome-ignore lint/suspicious/noExplicitAny: enum imported indirectly
       status: "ACTIVE" as any,
+      ledgerNumber: 51,
       changedAt: "2024-06-15T01:00:00Z",
     });
 
-    expect(mockBatchRepo.update).toHaveBeenCalledWith(
-      { id: "dist-1" },
-      { status: "ACTIVE", resumedAt: "2024-06-15T01:00:00Z" },
-    );
+    expect(createQb.set).toHaveBeenCalledWith({
+      status: "ACTIVE",
+      resumedAt: "2024-06-15T01:00:00Z",
+      statusLedger: 51,
+    });
+    expect(createQb.execute).toHaveBeenCalled();
+  });
+
+  it("guards status updates against stale ledgers", async () => {
+    const repo = new DistributionRepository(mockDataSource as unknown as DataSource);
+    await repo.setStatus({
+      distributionId: "dist-1",
+      // biome-ignore lint/suspicious/noExplicitAny: enum imported indirectly
+      status: "PAUSED" as any,
+      ledgerNumber: 50,
+      changedAt: "2024-06-15T00:00:00Z",
+    });
+
+    const [clause, params] = createQb.where.mock.calls[0];
+    expect(clause).toContain('"statusLedger" IS NULL OR "statusLedger" <= :ledgerNumber');
+    expect(params).toEqual({ distributionId: "dist-1", ledgerNumber: 50 });
   });
 });
