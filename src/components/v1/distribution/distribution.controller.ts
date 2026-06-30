@@ -1,96 +1,95 @@
 import type { Request, Response } from "express"
 import AppDataSource from "../../../config/persistence/data-source"
+import { sendError, sendSuccess } from "../../../utils/apiResponse"
+import logger from "../../../utils/logger"
 import { DistributionEntity } from "./distribution.entity"
-import { DistributionService } from "./distribution.service"
-import type { ApiResponse, DistributionResponseDto, CreateDistributionDto, UpdateDistributionDto } from "./distribution.dto"
+import { DistributionNotFoundError, DistributionService } from "./distribution.service"
+import type { CreateDistributionDto, UpdateDistributionDto } from "./distribution.dto"
 
-const getDistributionService = () => {
+/**
+ * Raised when the data source has not finished initializing. Carries a stable
+ * `code` so it maps to a predictable 503 payload instead of a generic 500.
+ */
+export class DatabaseNotReadyError extends Error {
+  public readonly code = "DB_NOT_READY"
+  constructor() {
+    super("Database not initialized")
+    this.name = "DatabaseNotReadyError"
+  }
+}
+
+export type DistributionServiceResolver = () => DistributionService
+
+/**
+ * Default resolver used by the routes. Tests inject their own resolver so the
+ * controller logic can be exercised without a live database connection.
+ */
+export const defaultDistributionServiceResolver: DistributionServiceResolver = () => {
   if (!AppDataSource.isInitialized) {
-    throw new Error("Database not initialized")
+    throw new DatabaseNotReadyError()
   }
 
-  const distributionRepository = AppDataSource.getRepository(DistributionEntity)
-  return new DistributionService(distributionRepository)
+  return new DistributionService(AppDataSource.getRepository(DistributionEntity))
 }
 
-export const createDistribution = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const distributionService = getDistributionService()
-
-    const validatedData = req.body as CreateDistributionDto
-
-    const distribution = await distributionService.createDistribution(validatedData)
-
-    const response: ApiResponse<DistributionResponseDto> = {
-      data: distribution,
-      success: true,
-      message: "Distribution created successfully",
-    }
-
-    res.status(201).json(response)
-  } catch (error) {
-    console.error("Error in createDistribution:", error)
-
-    const errorResponse: ApiResponse<null> = {
-      data: null,
-      success: false,
-      message: error instanceof Error ? error.message : "Internal server error",
-    }
-
-    res.status(500).json(errorResponse)
+const handleControllerError = (res: Response, error: unknown, context: string): void => {
+  if (error instanceof DatabaseNotReadyError) {
+    sendError(res, 503, {
+      code: "DB_NOT_READY",
+      message: "Database not initialized",
+    })
+    return
   }
-}
 
-export const updateDistribution = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const distributionService = getDistributionService()
-    const { id } = req.params
-    const validatedData = req.body as UpdateDistributionDto
-
-    const distribution = await distributionService.updateDistribution(id, validatedData)
-
-    const response: ApiResponse<DistributionResponseDto> = {
-      data: distribution,
-      success: true,
-      message: "Distribution updated successfully",
-    }
-
-    res.status(200).json(response)
-  } catch (error) {
-    console.error("Error in updateDistribution:", error)
-
-    const isNotFound = error instanceof Error && error.message === "Distribution not found"
-    const status = isNotFound ? 404 : 500
-    const errorResponse: ApiResponse<null> = {
-      data: null,
-      success: false,
-      message: isNotFound && error instanceof Error ? error.message : "Internal server error",
-    }
-    res.status(status).json(errorResponse)
+  const code = (error as { code?: unknown })?.code
+  if (error instanceof DistributionNotFoundError || code === "DISTRIBUTION_NOT_FOUND") {
+    sendError(res, 404, {
+      code: "DISTRIBUTION_NOT_FOUND",
+      message: error instanceof Error ? error.message : "Distribution not found",
+    })
+    return
   }
+
+  logger.error(`${context}: ${error instanceof Error ? error.message : String(error)}`)
+  sendError(res, 500, {
+    code: "INTERNAL_ERROR",
+    message: "Internal server error",
+  })
 }
 
-export const listDistributions = async (_req: Request, res: Response): Promise<void> => {
-  try {
-    const distributionService = getDistributionService()
-    const distributions = await distributionService.listDistributions()
-
-    const response: ApiResponse<DistributionResponseDto[]> = {
-      data: distributions,
-      success: true,
-      message: "Distributions fetched successfully",
+export const createDistribution =
+  (resolve: DistributionServiceResolver = defaultDistributionServiceResolver) =>
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const service = resolve()
+      const distribution = await service.createDistribution(req.body as CreateDistributionDto)
+      sendSuccess(res, distribution, 201)
+    } catch (error) {
+      handleControllerError(res, error, "Error in createDistribution")
     }
-
-    res.status(200).json(response)
-  } catch (error) {
-    console.error("Error in listDistributions:", error)
-
-    const errorResponse: ApiResponse<null> = {
-      data: null,
-      success: false,
-      message: error instanceof Error ? error.message : "Internal server error",
-    }
-
-    res.status(500).json(errorResponse)
   }
-}
+
+export const updateDistribution =
+  (resolve: DistributionServiceResolver = defaultDistributionServiceResolver) =>
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const service = resolve()
+      const { id } = req.params
+      const distribution = await service.updateDistribution(id, req.body as UpdateDistributionDto)
+      sendSuccess(res, distribution)
+    } catch (error) {
+      handleControllerError(res, error, "Error in updateDistribution")
+    }
+  }
+
+export const listDistributions =
+  (resolve: DistributionServiceResolver = defaultDistributionServiceResolver) =>
+  async (_req: Request, res: Response): Promise<void> => {
+    try {
+      const service = resolve()
+      const distributions = await service.listDistributions()
+      sendSuccess(res, distributions)
+    } catch (error) {
+      handleControllerError(res, error, "Error in listDistributions")
+    }
+  }
