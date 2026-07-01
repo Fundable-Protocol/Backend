@@ -2,6 +2,7 @@ import { NextFunction, Response } from 'express';
 import { Schema, z } from 'zod';
 
 import { IRequest } from '../types/global';
+import { sendError } from '../utils/apiResponse';
 
 const policyMiddleware =
     (schema: Schema, fieldType: 'body' | 'params' | 'query' = 'body') =>
@@ -20,17 +21,14 @@ const policyMiddleware =
                     issue.message
                 }`.toLowerCase();
 
-                const error = {
-                    name: 'BadRequestError',
-                    httpCode: 400,
-                    type: 'API',
+                return sendError(res, 400, {
+                    code: 'VALIDATION_ERROR',
                     message,
-                };
-
-                return next(error);
+                    details: { issues: err.issues },
+                });
             }
 
-            next(err);
+            return next(err);
         }
     };
 
