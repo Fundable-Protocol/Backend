@@ -7,6 +7,7 @@ import {
 
 import campaignRoutes from './campaign/campaign.routes';
 import donationRoutes from './Donation/donation.routes';
+import walletRoutes from './wallet/wallet.routes';
 import {
     listCampaignDonationsQuerySchema,
     listUserDonationsQuerySchema,
@@ -21,6 +22,7 @@ const router = new EnhancedRouter();
 
 router.use('/campaigns', campaignRoutes);
 router.use('/donations', donationRoutes);
+router.use('/wallets', walletRoutes);
 
 router.get(
     '/campaigns/:campaignId/donations',

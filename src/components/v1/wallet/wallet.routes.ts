@@ -1,9 +1,14 @@
-import EnhancedRouter from '../../../utils/enhancedRouter';
+import { Router } from 'express';
 
+import {
+    requireAdminApi,
+    requireJwtAuthApi,
+} from '../../../appMiddlewares/jwtAuth.api';
 import { listWallets } from './wallet.controller';
 
-const walletRouter = new EnhancedRouter();
+const router = Router();
 
-// walletRouter.get('/');
+// List all wallets (JWT + admin required)
+router.get('/', requireJwtAuthApi, requireAdminApi, listWallets);
 
-export default walletRouter.getRouter();
+export default router;
