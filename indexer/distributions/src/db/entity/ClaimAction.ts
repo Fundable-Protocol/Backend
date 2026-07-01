@@ -6,48 +6,48 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  Unique,
 } from "typeorm";
-
 import { DistributionBatch } from "./DistributionBatch.js";
 
-@Entity("claim_action")
-@Index("claim_action_batch_id_idx", ["batchId"])
-@Index("claim_action_claimant_idx", ["claimant"])
-@Index("claim_action_tx_hash_idx", ["txHash"])
-@Index("claim_action_batch_claimant_idx", ["batchId", "claimant"])
+/**
+ * A single token claim against a distribution batch.
+ *
+ * The `(txHash, ledgerNumber, eventIndex)` triple is unique so a replayed
+ * `tokens_claimed` event cannot create a duplicate claim row, which keeps the
+ * batch's `claimedAmount` from being double-counted.
+ */
+@Entity("distribution_claim_action")
+@Unique("uq_claim_event_identity", ["txHash", "ledgerNumber", "eventIndex"])
 export class ClaimAction {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column({ type: "varchar", comment: "Distribution batch this claim belongs to" })
+  @Index()
+  @Column({ type: "varchar", comment: "The ID of the distribution batch this claim belongs to" })
   batchId!: string;
 
-  @ManyToOne(
-    () => DistributionBatch,
-    (batch) => batch.claims,
-    { onDelete: "CASCADE" },
-  )
+  @ManyToOne(() => DistributionBatch, { onDelete: "CASCADE" })
   @JoinColumn({ name: "batchId" })
   batch!: DistributionBatch;
 
-  @Column({ type: "varchar", comment: "Address that claimed tokens" })
+  @Index()
+  @Column({ type: "varchar", comment: "The address that claimed tokens" })
   claimant!: string;
 
-  @Column({
-    type: "numeric",
-    precision: 78,
-    scale: 0,
-    comment: "Claimed amount in the token's smallest unit",
-  })
+  @Column({ type: "bigint", comment: "The amount claimed" })
   amount!: string;
 
   @Column({ type: "varchar", comment: "Transaction hash where the claim occurred" })
   txHash!: string;
 
-  @Column({ type: "bigint", comment: "Ledger where the claim was recorded" })
-  ledgerNumber!: string;
+  @Column({ type: "int", comment: "Ledger number the claim event was indexed at" })
+  ledgerNumber!: number;
 
-  @Column({ type: "bigint", comment: "On-chain timestamp of the claim" })
+  @Column({ type: "int", comment: "Deterministic event position within the ledger" })
+  eventIndex!: number;
+
+  @Column({ type: "varchar", comment: "Timestamp the claim event closed at" })
   eventTimestamp!: string;
 
   @CreateDateColumn()

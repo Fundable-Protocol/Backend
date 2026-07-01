@@ -1,93 +1,82 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  Index,
-  OneToMany,
-  PrimaryColumn,
-  UpdateDateColumn,
-} from "typeorm";
+import { Column, CreateDateColumn, Entity, Index, PrimaryColumn, UpdateDateColumn } from "typeorm";
 
-import type { DistributionBatchStatus } from "../status.js";
-import { ClaimAction } from "./ClaimAction.js";
+/**
+ * Lifecycle status of a distribution batch. Mirrors the `DistributionStatus`
+ * enum exposed in the GraphQL schema.
+ */
+export enum DistributionStatus {
+  ACTIVE = "ACTIVE",
+  PAUSED = "PAUSED",
+  COMPLETED = "COMPLETED",
+  CANCELLED = "CANCELLED",
+}
 
+/**
+ * Durable state for a distribution created on-chain. The primary key is the
+ * deterministic on-chain distribution ID so re-processing a `distribution_created`
+ * event maps to the same row.
+ */
 @Entity("distribution_batch")
-@Index("distribution_batch_contract_id_idx", ["contractId"])
-@Index("distribution_batch_distributor_idx", ["distributor"])
-@Index("distribution_batch_status_idx", ["status"])
-@Index("distribution_batch_created_at_idx", ["createdAt"])
-@Index("distribution_batch_contract_status_idx", ["contractId", "status"])
 export class DistributionBatch {
   @PrimaryColumn({
     type: "varchar",
-    comment: "Deterministic batch ID from the Soroban contract",
+    comment: "The deterministic on-chain distribution ID",
   })
   id!: string;
 
-  @Column({ type: "varchar", comment: "Soroban contract that emitted the batch" })
+  @Index()
+  @Column({ type: "varchar", comment: "The distribution contract address" })
   contractId!: string;
 
-  @Column({ type: "varchar", comment: "Address that created the distribution batch" })
+  @Index()
+  @Column({ type: "varchar", comment: "The address that created the distribution" })
   distributor!: string;
 
-  @Column({ type: "varchar", comment: "Token asset contract address" })
+  @Column({ type: "varchar", comment: "The token asset address" })
   token!: string;
 
-  @Column({
-    type: "numeric",
-    precision: 78,
-    scale: 0,
-    comment: "Total allocated amount in the token's smallest unit",
-  })
+  @Column({ type: "bigint", comment: "The total amount of tokens in the distribution" })
   totalAmount!: string;
 
-  @Column({
-    type: "numeric",
-    precision: 78,
-    scale: 0,
-    default: "0",
-    comment: "Total amount claimed so far in the token's smallest unit",
-  })
+  @Column({ type: "bigint", default: "0", comment: "Total amount claimed so far" })
   claimedAmount!: string;
 
-  @Column({ type: "integer", default: 0, comment: "Number of intended recipients" })
+  @Column({ type: "int", comment: "Number of recipients in the distribution" })
   recipientCount!: number;
 
   @Column({
-    type: "varchar",
-    default: "active",
-    comment: "Batch lifecycle status for pause/resume behavior",
+    type: "enum",
+    enum: DistributionStatus,
+    default: DistributionStatus.ACTIVE,
+    comment: "Current lifecycle status of the distribution",
   })
-  status!: DistributionBatchStatus;
+  status!: DistributionStatus;
 
-  @Column({
-    type: "bigint",
-    nullable: true,
-    comment: "Unix timestamp when the batch was paused",
-  })
+  @Column({ type: "varchar", nullable: true, comment: "Timestamp the distribution was paused" })
   pausedAt!: string | null;
 
-  @Column({
-    type: "bigint",
-    nullable: true,
-    comment: "Unix timestamp when the batch was last resumed",
-  })
+  @Column({ type: "varchar", nullable: true, comment: "Timestamp the distribution was resumed" })
   resumedAt!: string | null;
 
-  @Column({ type: "varchar", comment: "Contract-unique reference for the batch" })
+  @Column({
+    type: "int",
+    nullable: true,
+    comment: "Ledger of the last applied status change, used to reject stale pause/resume writes",
+  })
+  statusLedger!: number | null;
+
+  @Column({
+    type: "varchar",
+    unique: true,
+    comment: "Unique reference for the batch (on-chain distribution ID)",
+  })
   uniqueRef!: string;
 
-  @Column({ type: "bigint", comment: "Ledger where the batch was created" })
-  ledgerNumber!: string;
+  @Column({ type: "int", comment: "Ledger number the creation event was indexed at" })
+  ledgerNumber!: number;
 
-  @Column({ type: "varchar", comment: "Transaction hash that created the batch" })
+  @Column({ type: "varchar", comment: "Transaction hash where the distribution was created" })
   txHash!: string;
-
-  @OneToMany(
-    () => ClaimAction,
-    (claim) => claim.batch,
-  )
-  claims!: ClaimAction[];
 
   @CreateDateColumn()
   createdAt!: Date;
