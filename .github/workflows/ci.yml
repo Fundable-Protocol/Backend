@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [ "dev", "main" ]
+  pull_request:
+    branches: [ "dev", "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Check for restricted lockfiles
+      run: |
+        if [ -f package-lock.json ] || [ -f yarn.lock ] || [ -f pnpm-lock.yaml ]; then
+          echo "Error: Found npm, yarn, or pnpm lockfiles. This repository strictly uses Bun."
+          echo "Please remove package-lock.json, yarn.lock, or pnpm-lock.yaml and try again."
+          exit 1
+        fi
+
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v1
+      with:
+        bun-version: "1.3.8"
+
+    - name: Install dependencies
+      run: bun install
+
+    - name: Backend - Type Check
+      run: bun run type-check
+
+    - name: Backend - Lint
+      run: bun run lint
+
+    - name: Backend - Test
+      run: bun run test
+
+    - name: Indexer - Type Check
+      run: bun run indexer:type-check
+
+    - name: Indexer - Lint
+      run: bun run indexer:lint
+
+    - name: Indexer - Test
+      run: bun run indexer:test

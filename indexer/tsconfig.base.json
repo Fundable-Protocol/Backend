@@ -20,6 +20,8 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "ES2023",
-    "types": ["vitest/globals"]
+    "types": ["vitest/globals"],
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   }
 }

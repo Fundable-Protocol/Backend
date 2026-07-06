@@ -3,6 +3,19 @@ import type { Repository } from "typeorm"
 import type { DistributionEntity } from "./distribution.entity"
 import type { CreateDistributionDto, DistributionResponseDto, UpdateDistributionDto } from "./distribution.dto"
 import { DistributionStatus, Network } from "../../../types/enums"
+import logger from "../../../utils/logger"
+
+/**
+ * Raised when an update targets a distribution that does not exist. Carries a
+ * stable `code` so controllers can map it to a 404 without matching on message text.
+ */
+export class DistributionNotFoundError extends Error {
+  public readonly code = "DISTRIBUTION_NOT_FOUND"
+  constructor(message = "Distribution not found") {
+    super(message)
+    this.name = "DistributionNotFoundError"
+  }
+}
 
 export class DistributionService {
   constructor(private readonly distributionRepository: Repository<DistributionEntity>) {}
@@ -16,7 +29,7 @@ export class DistributionService {
 
       return this.formatDistributionResponse(savedDistribution)
     } catch (error) {
-      console.error("Error creating distribution:", error)
+      logger.error(`Error creating distribution: ${error instanceof Error ? error.message : String(error)}`)
       throw new Error("Failed to create distribution")
     }
   }
@@ -25,7 +38,7 @@ export class DistributionService {
     try {
       const distribution = await this.distributionRepository.findOne({ where: { id } })
       if (!distribution) {
-        throw new Error("Distribution not found")
+        throw new DistributionNotFoundError()
       }
 
       const updatedFields: Partial<DistributionEntity> = { ...updateData }
@@ -57,7 +70,10 @@ export class DistributionService {
 
       return this.formatDistributionResponse(savedDistribution)
     } catch (error) {
-      console.error("Error updating distribution:", error)
+      if (error instanceof DistributionNotFoundError) {
+        throw error
+      }
+      logger.error(`Error updating distribution: ${error instanceof Error ? error.message : String(error)}`)
       throw error instanceof Error ? error : new Error("Failed to update distribution")
     }
   }
@@ -71,7 +87,7 @@ export class DistributionService {
 
       return distributions.map((d) => this.formatDistributionResponse(d))
     } catch (error) {
-      console.error("Error listing distributions:", error)
+      logger.error(`Error listing distributions: ${error instanceof Error ? error.message : String(error)}`)
       throw new Error("Failed to list distributions")
     }
   }
@@ -115,7 +131,7 @@ export class DistributionService {
       const rate = new Decimal(usdRate)
       return amount.mul(rate).toString()
     } catch (error) {
-      console.warn("Error calculating total USD amount:", error)
+      logger.warn(`Error calculating total USD amount: ${error instanceof Error ? error.message : String(error)}`)
       return "0"
     }
   }

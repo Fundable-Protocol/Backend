@@ -30,6 +30,7 @@ Ensure you have the following installed on your system:
 ## Development Setup
 
 ### First-time setup
+
 ```bash
 # 1. Copy environment config
 cp .env.example .env
@@ -44,6 +45,7 @@ bun run dev
 ```
 
 ### Daily workflow
+
 ```bash
 make db          # start database
 bun run dev      # start API
@@ -53,6 +55,7 @@ make db-reset    # wipe all data and start fresh
 ```
 
 ### Migrations
+
 ```bash
 # Run pending migrations
 make migrate
@@ -229,9 +232,9 @@ Request body:
 
 ```json
 {
-  "campaign_ref": "ABCDE",
-  "target_amount": "1000",
-  "donation_token": "0x1"
+    "campaign_ref": "ABCDE",
+    "target_amount": "1000",
+    "donation_token": "0x1"
 }
 ```
 
@@ -261,5 +264,70 @@ For local development without a chain connection:
 
 ---
 
+## API: List Wallets
+
+**GET** `/api/v1/wallets` (JWT + admin required)
+
+Returns a list of all wallets in the system.
+
+Request:
+
+```bash
+curl -H "Authorization: Bearer <JWT_TOKEN>" http://localhost:3000/api/v1/wallets
+```
+
+Response (Success - 200):
+
+```json
+{
+    "success": true,
+    "data": [
+        {
+            "id": "wallet-uuid",
+            "address": "0x123abc...",
+            "network": "ETHEREUM",
+            "chainId": "1",
+            "chainName": "Ethereum",
+            "balance": "100.50",
+            "createdAt": "2026-06-29T10:00:00.000Z",
+            "updatedAt": "2026-06-29T10:00:00.000Z"
+        }
+    ]
+}
+```
+
+Response (Error - 401 Unauthorized):
+
+```json
+{
+    "success": false,
+    "error": {
+        "code": "AUTH_MISSING_TOKEN",
+        "message": "Missing authentication token",
+        "details": {}
+    }
+}
+```
+
+Response (Error - 500 Internal Server Error):
+
+```json
+{
+    "success": false,
+    "error": {
+        "code": "WALLET_LIST_FAILED",
+        "message": "Failed to retrieve wallets",
+        "details": { "reason": "..." }
+    }
+}
+```
+
+Notes:
+
+- Requires valid JWT token in `Authorization: Bearer <token>` header
+- Returns empty array if no wallets exist
+- Includes wallet address, network, chain info, and balance
+
+---
 
 ### Any challenges? Reach out!
