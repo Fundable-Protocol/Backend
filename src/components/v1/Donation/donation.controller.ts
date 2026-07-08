@@ -16,11 +16,21 @@ const getService = () => {
     return new DonationService(AppDataSource.getRepository(DonationEntity));
 };
 
+const isDatabaseNotInitializedError = (error: unknown) =>
+    error instanceof Error && /database not initialized/i.test(error.message);
+
 const handleError = (
     res: Response,
     error: unknown,
     defaultMessage = 'Internal server error'
 ) => {
+    if (isDatabaseNotInitializedError(error)) {
+        return sendError(res, 500, {
+            code: 'DB_NOT_READY',
+            message: 'Database not initialized',
+        });
+    }
+
     const message = error instanceof Error ? error.message : defaultMessage;
     return sendError(res, 500, { code: 'INTERNAL_ERROR', message });
 };

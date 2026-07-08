@@ -1,8 +1,4 @@
-import type {
-  EventHandler,
-  HandlerResult,
-  SorobanEventInput,
-} from "@fundable-indexer/common";
+import type { EventHandler, HandlerResult, SorobanEventInput } from "@fundable-indexer/common";
 import { parseStreamFunded } from "./types.js";
 
 export const streamFundedHandler: EventHandler = async (

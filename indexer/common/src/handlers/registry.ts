@@ -1,9 +1,4 @@
-import type {
-  EventHandler,
-  HandlerFilter,
-  HandlerResult,
-  SorobanEventInput,
-} from "./types.js";
+import type { EventHandler, HandlerFilter, HandlerResult, SorobanEventInput } from "./types.js";
 
 interface RegisteredHandler {
   filter: HandlerFilter;
@@ -43,8 +38,8 @@ export class HandlerRegistry {
           ok: false as const,
           error: err instanceof Error ? err.message : String(err),
           retriable: true,
-        }))
-      )
+        })),
+      ),
     );
   }
 }

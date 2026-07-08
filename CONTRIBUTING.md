@@ -89,3 +89,5 @@ Every PR should include:
 Use the root `.github` templates. Do not include unrelated formatting,
 generated files, or changes from another issue.
 
+Note: A GitHub Actions CI workflow automatically runs verification checks (type-check, lint, test) on all Pull Requests and pushes to `dev`/`main`. PRs containing `npm`, `yarn`, or `pnpm` lockfiles will automatically fail. Please ensure you only use Bun.
+
