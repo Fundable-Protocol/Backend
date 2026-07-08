@@ -8,7 +8,7 @@ const execAsync = promisify(exec);
 const migrationName = process.argv[2];
 
 if (!migrationName) {
-    console.error('Please provide a migration name.');
+    logger.error('Please provide a migration name.');
     process.exit(1);
 }
 
@@ -20,7 +20,7 @@ const command = `pnpm typeorm migration:generate --outputJs src/migrations/${mig
         const { stdout, stderr } = await execAsync(command);
 
         if (stdout.includes('No changes in database schema were found')) {
-            console.warn(
+            logger.warn(
                 'No schema changes detected. Skipping migration generation.'
             );
             return;
