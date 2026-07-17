@@ -197,7 +197,7 @@ class ErrorHandler {
         let { message, httpCode, type } = error as AppError;
         const { name, extra } = error as AppError;
 
-        console.info(message, name);
+        logger.info(`${name}: ${message}`);
 
         switch (name) {
             case 'ValidationError':

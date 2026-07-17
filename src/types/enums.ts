@@ -13,6 +13,13 @@ export enum DistributionStatus {
   CANCELLED = "cancelled",
 }
 
+export enum DonationStatus {
+  PENDING = "pending",
+  CONFIRMED = "confirmed",
+  FAILED = "failed",
+  REFUNDED = "refunded",
+}
+
 export enum Network {
   MAINNET = "mainnet",
   TESTNET = "testnet",
