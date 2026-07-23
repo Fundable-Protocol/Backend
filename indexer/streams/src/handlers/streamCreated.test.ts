@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 
+import type { StreamWriteService } from "../db/repository.js";
 import {
   STREAM_CREATED_TOPIC,
   getEventIdentity,
@@ -143,9 +144,9 @@ describe("mapStreamCreatedToRecord", () => {
 });
 
 describe("handleStreamCreated", () => {
-  test("returns stream record and identity", () => {
+  test("returns stream record and identity", async () => {
     const event = createMockEvent();
-    const result = handleStreamCreated(event);
+    const result = await handleStreamCreated(event);
 
     expect(result.stream.id).toBe("stream-1");
     expect(result.stream.contractId).toBe("0x123");
@@ -153,15 +154,32 @@ describe("handleStreamCreated", () => {
     expect(result.identity).toBe("0x123:12345:0xabc:0");
   });
 
-  test("is idempotent (same input produces same output)", () => {
+  test("persists a created stream through the write service", async () => {
+    const persistence: StreamWriteService = {
+      createStream: async (input) => {
+        expect(input.id).toBe("stream-1");
+        expect(input.totalAmount).toBe("1000000000");
+      },
+      fundStream: async () => {},
+      recordWithdrawal: async () => {},
+      recordCancel: async () => {},
+    };
+
     const event = createMockEvent();
-    const result1 = handleStreamCreated(event);
-    const result2 = handleStreamCreated(event);
+    await expect(handleStreamCreated(event, persistence)).resolves.toMatchObject({
+      stream: { id: "stream-1" },
+    });
+  });
+
+  test("is idempotent (same input produces same output)", async () => {
+    const event = createMockEvent();
+    const result1 = await handleStreamCreated(event);
+    const result2 = await handleStreamCreated(event);
 
     expect(result1).toEqual(result2);
   });
 
-  test("handles different stream IDs correctly", () => {
+  test("handles different stream IDs correctly", async () => {
     const event1 = createMockEvent({
       data: JSON.stringify({ ...mockPayload, streamId: "stream-1" }),
     });
@@ -169,8 +187,8 @@ describe("handleStreamCreated", () => {
       data: JSON.stringify({ ...mockPayload, streamId: "stream-2" }),
     });
 
-    const result1 = handleStreamCreated(event1);
-    const result2 = handleStreamCreated(event2);
+    const result1 = await handleStreamCreated(event1);
+    const result2 = await handleStreamCreated(event2);
 
     expect(result1.stream.id).toBe("stream-1");
     expect(result2.stream.id).toBe("stream-2");

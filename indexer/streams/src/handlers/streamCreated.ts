@@ -1,3 +1,4 @@
+import type { StreamCreateInput, StreamWriteService } from "../db/repository.js";
 import type { StreamCreatedEvent, StreamRecord } from "./types.js";
 
 export const STREAM_CREATED_TOPIC = "StreamCreated";
@@ -76,13 +77,29 @@ export function mapStreamCreatedToRecord(
   };
 }
 
-export function handleStreamCreated(event: StreamCreatedEvent): {
+export async function handleStreamCreated(
+  event: StreamCreatedEvent,
+  persistence?: StreamWriteService,
+): Promise<{
   stream: StreamRecord;
   identity: string;
-} {
+}> {
   const payload = parseStreamCreatedPayload(event);
   const stream = mapStreamCreatedToRecord(payload, event);
   const identity = getEventIdentity(event);
+
+  await persistence?.createStream(
+    {
+      id: stream.id,
+      sender: stream.sender,
+      recipient: stream.recipient,
+      token: "",
+      totalAmount: stream.amount,
+      startTime: stream.startTime,
+      endTime: stream.endTime,
+    } satisfies StreamCreateInput,
+    identity,
+  );
 
   return { stream, identity };
 }
