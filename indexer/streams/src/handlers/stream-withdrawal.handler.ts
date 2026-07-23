@@ -4,6 +4,7 @@ import type {
   SorobanEventInput,
 } from "@fundable-indexer/common";
 import type { StreamWriteService } from "../db/repository.js";
+import type { EventHandler, HandlerResult, SorobanEventInput } from "@fundable-indexer/common";
 import { parseStreamWithdrawal } from "./types.js";
 
 export function createStreamWithdrawalHandler(persistence?: StreamWriteService): EventHandler {

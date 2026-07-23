@@ -14,8 +14,7 @@ const baseEvent: SorobanEventInput = {
 };
 
 const ok: HandlerResult = { ok: true };
-const makeHandler = (result: HandlerResult = ok): EventHandler =>
-  vi.fn().mockResolvedValue(result);
+const makeHandler = (result: HandlerResult = ok): EventHandler => vi.fn().mockResolvedValue(result);
 
 describe("HandlerRegistry", () => {
   describe("register and matches", () => {
@@ -63,9 +62,7 @@ describe("HandlerRegistry", () => {
       registry.register({ contractId: "CABC123", topic: "stream_created" }, handler);
 
       expect(registry.matches(baseEvent)).toEqual([handler]);
-      expect(
-        registry.matches({ ...baseEvent, contractId: "COTHER" }),
-      ).toHaveLength(0);
+      expect(registry.matches({ ...baseEvent, contractId: "COTHER" })).toHaveLength(0);
     });
 
     test("returns multiple handlers when several match", () => {
@@ -99,10 +96,7 @@ describe("HandlerRegistry", () => {
 
       expect(h1).toHaveBeenCalledWith(baseEvent);
       expect(h2).toHaveBeenCalledWith(baseEvent);
-      expect(results).toEqual([
-        { ok: true },
-        { ok: false, error: "boom", retriable: true },
-      ]);
+      expect(results).toEqual([{ ok: true }, { ok: false, error: "boom", retriable: true }]);
     });
 
     test("returns empty array when no handlers match", async () => {
@@ -120,4 +114,3 @@ describe("HandlerRegistry", () => {
     });
   });
 });
-
