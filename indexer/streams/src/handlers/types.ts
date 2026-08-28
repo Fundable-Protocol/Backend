@@ -84,3 +84,28 @@ export function parseStreamCancel(data: unknown): StreamCancelPayload {
     transactionHash: str(d.transactionHash ?? d.tx_hash),
   };
 }
+
+export interface StreamCreatedPayloadParsed {
+  streamId: string | undefined;
+  sender: string | undefined;
+  recipient: string | undefined;
+  token: string | undefined;
+  amount: string | undefined;
+  startTime: string | undefined;
+  endTime: string | undefined;
+  transactionHash: string | undefined;
+}
+
+export function parseStreamCreated(data: unknown): StreamCreatedPayloadParsed {
+  const d = record(data);
+  return {
+    streamId: str(d.streamId ?? d.stream_id),
+    sender: str(d.sender),
+    recipient: str(d.recipient),
+    token: str(d.token),
+    amount: str(d.amount),
+    startTime: str(d.startTime ?? d.start_time),
+    endTime: str(d.endTime ?? d.end_time),
+    transactionHash: str(d.transactionHash ?? d.tx_hash),
+  };
+}
