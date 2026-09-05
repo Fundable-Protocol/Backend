@@ -1,9 +1,6 @@
-export { streamFundedHandler } from "./stream-funded.handler.js";
-export { streamWithdrawalHandler } from "./stream-withdrawal.handler.js";
-export { streamCancelHandler } from "./stream-cancel.handler.js";
-export {
-  handleStreamCreated,
-  parseStreamCreatedPayload,
-  STREAM_CREATED_TOPIC,
-} from "./streamCreated.js";
+export { createStreamFundedHandler } from "./stream-funded.handler.js";
+export { createStreamWithdrawalHandler } from "./stream-withdrawal.handler.js";
+export { createStreamCancelHandler } from "./stream-cancel.handler.js";
+export { createStreamCreatedHandler } from "./stream-created.handler.js";
+export { type StreamHandlerDeps, type EventIdentityStore, deriveEventIndex } from "./persistence.js";
 export * from "./types.js";
