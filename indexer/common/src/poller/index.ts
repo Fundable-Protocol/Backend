@@ -48,7 +48,6 @@ export class SorobanPoller {
    * Determines if an error is transient and should be retried.
    */
   private isTransientError(error: unknown): boolean {
-    // Basic transient error checking - expand based on specific RPC error formats
     const message = error instanceof Error ? error.message : String(error);
     return (
       message.includes("timeout") ||
@@ -72,21 +71,18 @@ export class SorobanPoller {
     updateCursor: (ledger: number) => Promise<void>,
   ): Promise<PollResult> {
     try {
-      // 1. Fetch events with retry logic for RPC
       const events = await this.withRetry(() => fetchEvents(startLedger, endLedger));
 
-      // 2. Process events sequentially
       for (const event of events) {
-        // If a handler fails, it throws, skipping the updateCursor step
         await processEvent(event);
       }
 
-      // 3. Update cursor ONLY if all events in the range succeeded
       await updateCursor(endLedger);
       return { success: true, lastProcessedLedger: endLedger };
     } catch (error) {
-      // Return the error to surface it. Cursor is intentionally not advanced.
       return { success: false, error: error instanceof Error ? error : new Error(String(error)) };
     }
   }
 }
+
+export * from './EventPoller';
